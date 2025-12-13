@@ -1,7 +1,9 @@
 import React from 'react';
-import { SITE_NAME } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const PrivacyPolicyPage: React.FC = () => {
+  const { siteSettings } = useSiteSettings();
+
   return (
     <div className="animate-fade-in bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-silver max-w-4xl mx-auto">
       <h1 className="text-4xl font-serif font-bold text-deep-navy text-center mb-6">Privacy Policy</h1>
@@ -12,7 +14,7 @@ const PrivacyPolicyPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">1. Introduction</h2>
           <p>
-            Welcome to {SITE_NAME}. We are committed to protecting your personal data and respecting your privacy. This Privacy Policy explains what personal data we collect, how we use it, and your rights in relation to it.
+            Welcome to {siteSettings.siteName}. We are committed to protecting your personal data and respecting your privacy. This Privacy Policy explains what personal data we collect, how we use it, and your rights in relation to it.
           </p>
         </section>
 

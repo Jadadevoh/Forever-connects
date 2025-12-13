@@ -1,7 +1,9 @@
 import React from 'react';
-import { SITE_NAME } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const StripeAgreementPage: React.FC = () => {
+  const { siteSettings } = useSiteSettings();
+
   return (
     <div className="animate-fade-in bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-silver max-w-4xl mx-auto">
       <h1 className="text-4xl font-serif font-bold text-deep-navy text-center mb-6">Stripe Connected Account Agreement</h1>
@@ -10,7 +12,7 @@ const StripeAgreementPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">1. Agreement to Stripe's Terms</h2>
           <p>
-            {SITE_NAME} uses Stripe, a third-party payment processor, to handle all donations and payouts. To enable the donation feature on your memorial, you must agree to the Stripe Connected Account Agreement.
+            {siteSettings.siteName} uses Stripe, a third-party payment processor, to handle all donations and payouts. To enable the donation feature on your memorial, you must agree to the Stripe Connected Account Agreement.
           </p>
           <p className="mt-2">
             By enabling donations, you are creating a "Connected Account" with Stripe and are agreeing to be bound by their terms of service, which may be modified by Stripe from time to time.
@@ -33,7 +35,7 @@ const StripeAgreementPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">3. Our Role</h2>
           <p>
-            {SITE_NAME} acts solely as a platform to facilitate the connection between you, your donors, and Stripe. We are not responsible for any issues arising from your relationship with Stripe, including payout schedules, disputes, or account limitations.
+            {siteSettings.siteName} acts solely as a platform to facilitate the connection between you, your donors, and Stripe. We are not responsible for any issues arising from your relationship with Stripe, including payout schedules, disputes, or account limitations.
           </p>
         </section>
         

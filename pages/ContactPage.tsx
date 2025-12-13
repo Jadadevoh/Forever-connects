@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendContactFormNotification } from '../services/emailService';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 
 const ContactPage: React.FC = () => {
@@ -9,11 +10,12 @@ const ContactPage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { apiSettings } = useApiSettings();
+  const { siteSettings } = useSiteSettings();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real application, you would handle the form submission here (e.g., save to a database).
-    sendContactFormNotification({ name, email, message }, apiSettings);
+    sendContactFormNotification({ name, email, message }, apiSettings, siteSettings.siteName);
     setSubmitted(true);
   };
 

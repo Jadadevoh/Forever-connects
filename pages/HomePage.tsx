@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useMemorials } from '../hooks/useMemorials';
 import MemorialCard from '../components/MemorialCard';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const HelpfulToolsSection: React.FC = () => {
     const features = [
@@ -51,12 +52,15 @@ const HelpfulToolsSection: React.FC = () => {
 
 const HomePage: React.FC = () => {
   const { memorials } = useMemorials();
+  const { siteSettings } = useSiteSettings();
   const publishedMemorials = memorials.filter(m => m.status === 'active');
+
+  const heroImage = siteSettings.heroImageUrl || 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop';
 
   return (
     <div className="animate-fade-in -mt-4 sm:-mt-6 lg:-mt-8">
         {/* Full-width Hero Section */}
-        <div className="w-full bg-cover bg-center h-96 sm:h-[500px] relative" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop')" }}>
+        <div className="w-full bg-cover bg-center h-96 sm:h-[500px] relative" style={{ backgroundImage: `url('${heroImage}')` }}>
             <div className="absolute inset-0 bg-deep-navy/40" />
             <div className="relative h-full flex items-center justify-center text-center text-white">
                 <div className="max-w-3xl px-4">

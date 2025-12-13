@@ -1,36 +1,39 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, MemorialPlan } from '../types';
-
-// Initial mock data
-const initialUsers: User[] = [
-    { id: 'user123', name: 'Demo User', email: 'user@example.com', plan: 'free', role: 'user' },
-    { id: 'user456', name: 'Premium User', email: 'premium@example.com', plan: 'premium', role: 'user' },
-    { id: 'admin007', name: 'Admin', email: 'admin@example.com', plan: 'eternal', role: 'admin' },
-];
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '../types';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 
 interface UsersContextType {
   users: User[];
-  updateUser: (userId: string, updatedData: Partial<User>) => void;
-  deleteUser: (userId: string) => void;
+  updateUser: (userId: string, updatedData: Partial<User>) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const updateUser = (userId: string, updatedData: Partial<User>) => {
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === userId ? { ...user, ...updatedData } : user
-      )
-    );
+  useEffect(() => {
+    const usersCollectionRef = collection(db, 'users');
+    const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
+        const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+        setUsers(usersList);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const updateUser = async (userId: string, updatedData: Partial<User>) => {
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, updatedData);
   };
 
-  const deleteUser = (userId: string) => {
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+  const deleteUser = async (userId: string) => {
+    // Note: Deleting a user document in Firestore does not delete their Auth record.
+    // A cloud function is needed to do that properly. This just removes their profile.
+    const userDocRef = doc(db, 'users', userId);
+    await deleteDoc(userDocRef);
   };
 
   return (

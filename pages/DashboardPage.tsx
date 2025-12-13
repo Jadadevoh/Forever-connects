@@ -1,5 +1,4 @@
 
-
 import React, { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -9,30 +8,22 @@ import { Memorial } from '../types';
 import EditUrlModal from '../components/EditUrlModal';
 
 const DashboardPage: React.FC = () => {
-  const { isLoggedIn, currentUser } = useAuth();
-  const { memorials, updateMemorialSlug } = useMemorials();
+  const { isLoggedIn, currentUser, loading: authLoading } = useAuth();
+  const { memorials, loading: memorialsLoading, updateMemorialSlug } = useMemorials();
   const [editingUrlMemorial, setEditingUrlMemorial] = useState<Memorial | null>(null);
 
   const { myDrafts, myPublishedMemorials, publicMemorials } = useMemo(() => {
     if (!currentUser) return { myDrafts: [], myPublishedMemorials: [], publicMemorials: [] };
-
     const allMyMemorials = memorials.filter(m => m.userId === currentUser.id);
     const drafts = allMyMemorials.filter(m => m.status === 'draft');
     const published = allMyMemorials.filter(m => m.status === 'active');
-    
     const publicMems = memorials.filter(m => m.userId !== currentUser.id && m.status === 'active');
-    
     return { myDrafts: drafts, myPublishedMemorials: published, publicMemorials: publicMems };
   }, [memorials, currentUser]);
 
-  const handleSlugUpdate = (newSlug: string) => {
-    if (!editingUrlMemorial) return;
-    const result = updateMemorialSlug(editingUrlMemorial.id, newSlug);
-    alert(result.message);
-    if (result.success) {
-      setEditingUrlMemorial(null);
-    }
-  };
+  if (authLoading || memorialsLoading) {
+    return <div className="text-center p-12">Loading Dashboard...</div>;
+  }
 
   if (!isLoggedIn) {
     return <Navigate to="/login" />;
@@ -40,12 +31,14 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      <EditUrlModal 
-        isOpen={!!editingUrlMemorial}
-        onClose={() => setEditingUrlMemorial(null)}
-        currentSlug={editingUrlMemorial?.slug || ''}
-        onSave={handleSlugUpdate}
-      />
+      {editingUrlMemorial && (
+        <EditUrlModal 
+          isOpen={!!editingUrlMemorial}
+          onClose={() => setEditingUrlMemorial(null)}
+          currentSlug={editingUrlMemorial.slug}
+          onSave={(newSlug) => updateMemorialSlug(editingUrlMemorial.id, newSlug)}
+        />
+      )}
       <div className="bg-white p-8 rounded-lg shadow-sm mb-8 border border-silver">
         <div className="flex justify-between items-center flex-wrap gap-4">
             <div>
@@ -61,7 +54,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Plan & Billing Section */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-silver">
         <h2 className="text-xl font-serif text-deep-navy mb-3">Plan & Billing</h2>
         <div className="flex justify-between items-center">
@@ -74,7 +66,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
       
-      {/* My Drafts Section */}
       {myDrafts.length > 0 && (
           <section className="mb-12">
             <div className="flex justify-between items-center mb-6">
@@ -89,7 +80,6 @@ const DashboardPage: React.FC = () => {
           </section>
       )}
 
-      {/* My Published Memorials Section */}
       <section className="mb-12">
         <h2 className="text-3xl font-serif text-deep-navy mb-6">My Published Memorials</h2>
         {myPublishedMemorials.length > 0 ? (
@@ -113,8 +103,6 @@ const DashboardPage: React.FC = () => {
         )}
       </section>
 
-
-      {/* Browse Public Memorials Section */}
       <section>
         <h2 className="text-3xl font-serif text-deep-navy mb-6">Browse Public Memorials</h2>
         {publicMemorials.length > 0 ? (

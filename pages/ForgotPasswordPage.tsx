@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendPasswordResetEmail } from '../services/emailService';
 import { Link } from 'react-router-dom';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { apiSettings } = useApiSettings();
+  const { siteSettings } = useSiteSettings();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendPasswordResetEmail(email, apiSettings);
+    sendPasswordResetEmail(email, apiSettings, siteSettings.siteName);
     setSubmitted(true);
   };
 

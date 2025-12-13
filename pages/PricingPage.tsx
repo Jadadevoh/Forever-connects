@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendPlanUpgradeNotification } from '../services/emailService';
 import { MemorialPlan } from '../types';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 
 const CheckIcon = () => (
@@ -39,6 +39,7 @@ const PaymentMethods: React.FC = () => {
 const PricingPage: React.FC = () => {
     const { isLoggedIn, currentUser, updateCurrentUser } = useAuth();
     const { apiSettings } = useApiSettings();
+    const { siteSettings } = useSiteSettings();
 
     const handleUpgrade = (plan: MemorialPlan) => {
         if (!isLoggedIn || !currentUser) {
@@ -54,7 +55,7 @@ const PricingPage: React.FC = () => {
         // In a real app, this would trigger a Stripe Checkout flow.
         // Here, we just update the user's state and send a notification.
         updateCurrentUser({ plan });
-        sendPlanUpgradeNotification(currentUser, plan, apiSettings);
+        sendPlanUpgradeNotification(currentUser, plan, apiSettings, siteSettings.siteName);
         alert(`Congratulations! You have been upgraded to the ${plan} plan. A confirmation email has been simulated (check your browser's developer console).`);
     };
 

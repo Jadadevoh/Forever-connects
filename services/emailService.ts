@@ -1,6 +1,5 @@
 import { ApiSettings } from '../hooks/useApiSettings';
 import { User, Memorial, Tribute, MemorialPlan, Donation, EmailSettings } from '../types';
-import { SITE_NAME } from '../config';
 
 // A helper function to check if SMTP is configured
 const isSmtpConfigured = (settings: ApiSettings): boolean => {
@@ -43,9 +42,9 @@ const sendEmail = (to: string, subject: string, body: string, settings: ApiSetti
 // --- New Email Functions ---
 
 // Welcome email sent after registration, including verification link
-export const sendWelcomeEmail = (user: User, settings: ApiSettings) => {
+export const sendWelcomeEmail = (user: User, settings: ApiSettings, siteName: string) => {
   const verificationLink = `${window.location.origin}${window.location.pathname}#/verify-email?token=${Date.now()}`; // Simulated token
-  const subject = `Welcome to ${SITE_NAME}, ${user.name}!`;
+  const subject = `Welcome to ${siteName}, ${user.name}!`;
   const body = `
 <p>Dear ${user.name},</p>
 <p>Welcome! We are honored to have you join our community.</p>
@@ -53,42 +52,42 @@ export const sendWelcomeEmail = (user: User, settings: ApiSettings) => {
 <p><a href="${verificationLink}">Verify Your Email</a></p>
 <p>If you have any questions, please don't hesitate to contact us.</p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(user.email, subject, body, settings);
 };
 
 // Password reset email
-export const sendPasswordResetEmail = (email: string, settings: ApiSettings) => {
+export const sendPasswordResetEmail = (email: string, settings: ApiSettings, siteName: string) => {
     const resetLink = `${window.location.origin}${window.location.pathname}#/reset-password?token=${Date.now()}`; // Simulated token
-    const subject = `Reset Your Password for ${SITE_NAME}`;
+    const subject = `Reset Your Password for ${siteName}`;
     const body = `
 <p>Hello,</p>
 <p>You requested a password reset. Please click the link below to set a new password:</p>
 <p><a href="${resetLink}">Reset Your Password</a></p>
 <p>If you did not request this, please ignore this email. This link will expire in 1 hour.</p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(email, subject, body, settings);
 };
 
 // Failed payment reminder (placeholder for webhook-driven logic)
-export const sendFailedPaymentNotification = (user: User, settings: ApiSettings) => {
-    const subject = `Action Required: Your payment for ${SITE_NAME} failed`;
+export const sendFailedPaymentNotification = (user: User, settings: ApiSettings, siteName: string) => {
+    const subject = `Action Required: Your payment for ${siteName} failed`;
     const body = `
 <p>Dear ${user.name},</p>
 <p>We were unable to process the payment for your plan. To keep your premium features active, please update your billing information.</p>
 <p>[Link to Billing Page]</p>
 <p>If you have any questions, please contact our support team.</p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
     sendEmail(user.email, subject, body, settings);
 };
 
 // Donation Receipt to Donor
-export const sendDonationReceipt = (donorEmail: string, donation: Donation, memorial: Memorial, settings: ApiSettings) => {
+export const sendDonationReceipt = (donorEmail: string, donation: Donation, memorial: Memorial, settings: ApiSettings, siteName: string) => {
     const memorialName = `${memorial.firstName} ${memorial.lastName}`;
     const subject = `Thank you for your donation to the memorial of ${memorialName}`;
     const body = `
@@ -97,13 +96,13 @@ export const sendDonationReceipt = (donorEmail: string, donation: Donation, memo
 <p>${!donation.isAnonymous && donation.message ? `Your message: <blockquote>"${donation.message}"</blockquote>` : ''}</p>
 <p>We are grateful for your support.</p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(donorEmail, subject, body, settings, memorial.emailSettings);
 };
 
 // Donation Notification to Memorial Owner
-export const sendDonationNotification = (donation: Donation, memorial: Memorial, owner: User, settings: ApiSettings) => {
+export const sendDonationNotification = (donation: Donation, memorial: Memorial, owner: User, settings: ApiSettings, siteName: string) => {
     const memorialName = `${memorial.firstName} ${memorial.lastName}`;
     const subject = `You have received a new donation for ${memorialName}`;
     const body = `
@@ -113,7 +112,7 @@ export const sendDonationNotification = (donation: Donation, memorial: Memorial,
 <p><strong>Amount:</strong> $${donation.amount.toFixed(2)}</p>
 <p><strong>Message:</strong> <blockquote>"${donation.message}"</blockquote></p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(owner.email, subject, body, settings, memorial.emailSettings);
 };
@@ -124,12 +123,14 @@ export const sendDonationNotification = (donation: Donation, memorial: Memorial,
 // Specific notification for new tributes
 export const sendNewTributeNotification = (
   memorial: Memorial,
-  tribute: Omit<Tribute, 'id' | 'createdAt' | 'likes'>,
+  // FIX: Updated type to include 'likes', which is now part of the Tribute type.
+  tribute: Omit<Tribute, 'id' | 'createdAt'>,
   owner: User,
-  settings: ApiSettings
+  settings: ApiSettings,
+  siteName: string
 ) => {
   const memorialName = `${memorial.firstName} ${memorial.lastName}`;
-  const memorialUrl = `${window.location.origin}${window.location.pathname}#/memorial/${memorial.id}`;
+  const memorialUrl = `${window.location.origin}${window.location.pathname}#/memorial/${memorial.slug}`;
   
   const subject = `New Tribute for ${memorialName}`;
   const body = `
@@ -143,20 +144,20 @@ export const sendNewTributeNotification = (
 <p>You can view the new tribute here:</p>
 <p><a href="${memorialUrl}">${memorialUrl}</a></p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(owner.email, subject, body, settings, memorial.emailSettings);
 };
 
 // Specific notification for plan upgrades
-export const sendPlanUpgradeNotification = (user: User, newPlan: MemorialPlan, settings: ApiSettings) => {
+export const sendPlanUpgradeNotification = (user: User, newPlan: MemorialPlan, settings: ApiSettings, siteName: string) => {
   const subject = 'Your Plan Has Been Upgraded!';
   const body = `
 <p>Dear ${user.name},</p>
 <p>Thank you for upgrading! Your plan has been successfully changed to <strong>${newPlan}</strong>.</p>
 <p>You now have access to all the features of your new plan. If you have any questions, please don't hesitate to contact us.</p>
 <br>
-<p>Sincerely,<br>The ${SITE_NAME} Team</p>
+<p>Sincerely,<br>The ${siteName} Team</p>
   `;
   sendEmail(user.email, subject, body, settings);
 };
@@ -164,10 +165,11 @@ export const sendPlanUpgradeNotification = (user: User, newPlan: MemorialPlan, s
 // Specific notification for contact form submissions
 export const sendContactFormNotification = (
   formData: { name: string; email: string; message: string },
-  settings: ApiSettings
+  settings: ApiSettings,
+  siteName: string
 ) => {
   const adminEmail = settings.smtpUser || 'admin@example.com'; // Send to admin
-  const subject = `New Contact Form Submission from ${formData.name}`;
+  const subject = `New Contact Form Submission from ${formData.name} - ${siteName}`;
   const body = `
 <p>You have received a new message from the website contact form.</p>
 <p><strong>Name:</strong> ${formData.name}</p>

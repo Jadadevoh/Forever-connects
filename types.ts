@@ -1,4 +1,10 @@
+import { Timestamp } from "firebase/firestore";
 
+export interface SiteSettings {
+  siteName: string;
+  logoUrl: string;
+  heroImageUrl: string;
+}
 
 export type GalleryItemType = 'image' | 'video' | 'audio' | 'document' | 'link';
 export type MemorialPlan = 'free' | 'premium' | 'eternal';
@@ -9,6 +15,7 @@ export interface User {
   email: string;
   plan: MemorialPlan;
   role?: 'user' | 'admin';
+  createdAt?: number; 
 }
 
 interface BaseGalleryItem {
@@ -19,7 +26,7 @@ interface BaseGalleryItem {
 
 export interface MediaItem extends BaseGalleryItem {
   type: 'image' | 'video' | 'audio' | 'document';
-  dataUrl: string; // Base64 encoded file data
+  url: string; 
   fileName: string;
 }
 
@@ -33,7 +40,7 @@ export type GalleryItem = MediaItem | LinkItem;
 
 export interface Photo {
   id: string;
-  dataUrl: string; // Base64 encoded image data
+  url: string; 
   caption?: string;
 }
 
@@ -41,24 +48,28 @@ export interface Tribute {
   id: string;
   author: string;
   message: string;
-  createdAt: string; // ISO date string
+  createdAt: Timestamp;
   photo?: Photo;
+  // FIX: Added 'likes' property to match usage in components like TributeList.
   likes: number;
 }
 
 export interface Donation {
   id: string;
-  name: string; // 'Anonymous' if isAnonymous is true
+  name: string;
+  email: string;
   amount: number;
   message: string;
   isAnonymous: boolean;
-  date: string; // ISO date string
+  date: number;
+  type: 'one-time' | 'monthly';
+  payoutStatus: 'pending' | 'paid';
 }
 
 export interface DonationInfo {
   isEnabled: boolean;
   recipient: string;
-  goal: number; // 0 if not set
+  goal: number;
   description: string;
   showDonorWall: boolean;
   suggestedAmounts: number[];
@@ -68,7 +79,7 @@ export interface DonationInfo {
 export interface EmailSettings {
   senderName: string;
   replyToEmail: string;
-  headerImageUrl: string; // dataUrl of the logo
+  headerImageUrl: string;
   footerMessage: string;
 }
 
@@ -90,13 +101,13 @@ export interface Memorial {
   profileImage: Photo;
   biography: string;
   gallery: GalleryItem[];
-  tributes: Tribute[];
-  theme: string; // e.g., 'classic-rose-classic'
+  theme: string;
   plan: MemorialPlan;
   donationInfo: DonationInfo;
   donations: Donation[];
   emailSettings: EmailSettings;
   status: 'draft' | 'active' | 'blocked';
+  createdAt?: number;
 }
 
 export interface MemorialCreationData {
@@ -121,10 +132,10 @@ export interface MemorialCreationData {
 }
 
 export interface Theme {
-    name: string; // e.g., 'classic-rose-classic'
-    title: string; // e.g., 'Classic Rose (Classic)'
+    name: string;
+    title: string;
     description: string;
-    colorTheme: string; // 'classic-rose'
+    colorTheme: string;
     layout: 'classic' | 'story';
     colors: {
         bg: string;

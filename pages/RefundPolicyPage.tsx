@@ -1,7 +1,9 @@
 import React from 'react';
-import { SITE_NAME } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const RefundPolicyPage: React.FC = () => {
+  const { siteSettings } = useSiteSettings();
+
   return (
     <div className="animate-fade-in bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-silver max-w-4xl mx-auto">
       <h1 className="text-4xl font-serif font-bold text-deep-navy text-center mb-6">Refund Policy</h1>
@@ -12,7 +14,7 @@ const RefundPolicyPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">1. Donations</h2>
           <p>
-            Once you make a donation on the {SITE_NAME} platform, it is final and non-refundable. Donations are considered personal gifts or contributions to the designated recipient (the memorial owner or a specified cause). As we facilitate the transfer of funds directly to the recipient via our payment processor, we are unable to reverse the transaction.
+            Once you make a donation on the {siteSettings.siteName} platform, it is final and non-refundable. Donations are considered personal gifts or contributions to the designated recipient (the memorial owner or a specified cause). As we facilitate the transfer of funds directly to the recipient via our payment processor, we are unable to reverse the transaction.
           </p>
         </section>
 

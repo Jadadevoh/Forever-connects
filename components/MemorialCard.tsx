@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Memorial } from '../types';
@@ -24,7 +22,6 @@ const MemorialCard: React.FC<MemorialCardProps> = ({ memorial, showManagementOpt
   
   const totalDonations = memorial.donations?.reduce((sum, d) => sum + d.amount, 0) || 0;
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -32,23 +29,15 @@ const MemorialCard: React.FC<MemorialCardProps> = ({ memorial, showManagementOpt
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuRef]);
 
   const handleManageClick = (action: 'edit' | 'url' | 'donations') => {
       setIsMenuOpen(false);
       switch(action) {
-          case 'edit':
-              navigate(`/edit/${memorial.id}`);
-              break;
-          case 'url':
-              onEditUrlClick?.(memorial);
-              break;
-          case 'donations':
-              navigate(`/edit/${memorial.id}`, { state: { defaultTab: 'donations' } });
-              break;
+          case 'edit': navigate(`/edit/${memorial.id}`); break;
+          case 'url': onEditUrlClick?.(memorial); break;
+          case 'donations': navigate(`/edit/${memorial.id}`, { state: { defaultTab: 'donations' } }); break;
       }
   }
 
@@ -56,18 +45,18 @@ const MemorialCard: React.FC<MemorialCardProps> = ({ memorial, showManagementOpt
   const isDraft = memorial.status === 'draft';
   const linkPath = isDraft ? `/edit/${memorial.id}` : `/memorial/${memorial.slug}`;
   const buttonText = isDraft ? 'Complete & Publish' : 'View Memorial';
+  
+  // Safely create a plain text preview of the biography
+  const biographyPreview = memorial.biography.replace(/<[^>]+>/g, '').substring(0, 150) + '...';
 
   return (
     <div className="relative bg-white rounded-lg shadow-sm overflow-hidden h-full flex flex-col transform hover:shadow-md transition-shadow duration-300 border border-silver">
-      {isDraft && (
-        <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full z-10">
-          DRAFT
-        </div>
-      )}
+      {isDraft && <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full z-10">DRAFT</div>}
       <Link to={linkPath} className="block group">
         <img
           className="w-full h-48 object-cover"
-          src={memorial.profileImage.dataUrl}
+          // FIX: Changed dataUrl to url to match Photo type.
+          src={memorial.profileImage.url}
           alt={fullName}
         />
       </Link>
@@ -82,9 +71,7 @@ const MemorialCard: React.FC<MemorialCardProps> = ({ memorial, showManagementOpt
             </div>
         )}
 
-        <p className="text-deep-navy/80 text-sm line-clamp-3 flex-grow">
-          {memorial.biography}
-        </p>
+        <p className="text-deep-navy/80 text-sm line-clamp-3 flex-grow">{biographyPreview}</p>
 
         <div className="mt-4 flex justify-between items-center">
           <Link to={linkPath} className="text-dusty-blue hover:text-deep-navy font-semibold transition-colors duration-300">

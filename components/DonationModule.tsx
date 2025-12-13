@@ -1,11 +1,10 @@
-
-
 import React, { useState } from 'react';
 import { Memorial, Donation } from '../types';
 import { useMemorials } from '../hooks/useMemorials';
 import { useUsers } from '../hooks/useUsers';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendDonationReceipt, sendDonationNotification } from '../services/emailService';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 interface DonationModuleProps {
     memorial: Memorial;
@@ -15,6 +14,7 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
     const { addDonation } = useMemorials();
     const { users } = useUsers();
     const { apiSettings } = useApiSettings();
+    const { siteSettings } = useSiteSettings();
 
     const [donationType, setDonationType] = useState<'one-time' | 'monthly'>('one-time');
     const [amount, setAmount] = useState(50);
@@ -54,19 +54,23 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
 
         const donationData: Omit<Donation, 'id' | 'date'> = {
             name: isAnonymous ? 'Anonymous' : name,
+            email: email,
             amount: finalAmount,
             message: message,
             isAnonymous: isAnonymous,
+            type: donationType,
+            payoutStatus: 'pending',
         };
 
         addDonation(memorial.id, donationData);
 
         // --- Email Notifications ---
         const owner = users.find(u => u.id === memorial.userId);
-        const fullDonationData = { ...donationData, id: '', date: '' }; // for receipt
-        sendDonationReceipt(email, fullDonationData, memorial, apiSettings);
+        // FIX: Create a full donation object with a valid date (number) for email notifications.
+        const fullDonationData: Donation = { ...donationData, id: '', date: Date.now(), payoutStatus: 'pending' }; // for receipt
+        sendDonationReceipt(email, fullDonationData, memorial, apiSettings, siteSettings.siteName);
         if (owner) {
-            sendDonationNotification(fullDonationData, memorial, owner, apiSettings);
+            sendDonationNotification(fullDonationData, memorial, owner, apiSettings, siteSettings.siteName);
         }
         // --- End Notifications ---
 
@@ -90,7 +94,8 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
             {/* Left Side: Info & Form */}
             <div>
                  <div className="flex items-start space-x-4 mb-4">
-                    <img src={memorial.profileImage.dataUrl} alt="In memory of" className="w-16 h-16 object-cover rounded-full" />
+                    {/* FIX: Changed dataUrl to url to match Photo type. */}
+                    <img src={memorial.profileImage.url} alt="In memory of" className="w-16 h-16 object-cover rounded-full" />
                     <div>
                         <h2 className="text-2xl font-serif font-bold text-deep-navy">Support this Memorial</h2>
                         <p className="text-soft-gray text-sm">For: {memorial.donationInfo.recipient}</p>

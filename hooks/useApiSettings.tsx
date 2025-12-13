@@ -6,8 +6,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export interface ApiSettings {
   stripePublicKey: string;
   stripeSecretKey: string;
-  geminiApiKey: string;
-  openAiApiKey: string;
   smtpHost: string;
   smtpPort: string;
   smtpUser: string;
@@ -30,8 +28,6 @@ const STORAGE_KEY = 'api_settings';
 const initialSettings: ApiSettings = {
   stripePublicKey: '',
   stripeSecretKey: '',
-  geminiApiKey: '',
-  openAiApiKey: '',
   smtpHost: '',
   smtpPort: '',
   smtpUser: '',

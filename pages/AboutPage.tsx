@@ -1,7 +1,9 @@
 import React from 'react';
-import { SITE_NAME } from '../config';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const AboutPage: React.FC = () => {
+  const { siteSettings } = useSiteSettings();
+
   return (
     <div className="animate-fade-in max-w-5xl mx-auto">
        {/* Hero Banner */}
@@ -19,7 +21,7 @@ const AboutPage: React.FC = () => {
         <section className="mb-8">
           <h2 className="text-3xl font-serif text-deep-navy mb-3 text-center">Our Mission</h2>
           <p className="text-lg text-deep-navy/90 leading-relaxed text-center max-w-3xl mx-auto">
-            In times of loss, finding a way to honor a cherished life can be a profound part of the healing process. {SITE_NAME} was created to be a sanctuary for memories—a digital space where the stories, photos, and tributes that define a person can be gathered and shared with love. We believe that remembering is an act of love. Our platform is designed to be simple, respectful, and beautiful, allowing families to focus on what truly matters: celebrating the unique journey of their loved one.
+            In times of loss, finding a way to honor a cherished life can be a profound part of the healing process. {siteSettings.siteName} was created to be a sanctuary for memories—a digital space where the stories, photos, and tributes that define a person can be gathered and shared with love. We believe that remembering is an act of love. Our platform is designed to be simple, respectful, and beautiful, allowing families to focus on what truly matters: celebrating the unique journey of their loved one.
           </p>
         </section>
 

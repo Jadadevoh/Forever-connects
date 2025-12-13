@@ -5,21 +5,35 @@ interface EditUrlModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentSlug: string;
-  onSave: (newSlug: string) => void;
+  onSave: (newSlug: string) => { success: boolean, message: string };
 }
 
 const EditUrlModal: React.FC<EditUrlModalProps> = ({ isOpen, onClose, currentSlug, onSave }) => {
   const [slug, setSlug] = useState(currentSlug);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setSlug(currentSlug);
-  }, [currentSlug]);
+    setError(''); // Reset error when modal is reopened
+  }, [isOpen, currentSlug]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(slug);
+    setError('');
+    setIsLoading(true);
+
+    // This is now a synchronous call
+    const result = onSave(slug);
+
+    setIsLoading(false);
+    if (!result.success) {
+      setError(result.message);
+    } else {
+      onClose(); // Parent will handle success message and navigation
+    }
   };
 
   const domain = window.location.origin + window.location.pathname;
@@ -32,15 +46,18 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({ isOpen, onClose, currentSlu
           Create a personal, memorable link for this memorial. Use only letters, numbers, and hyphens.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center">
-            <span className="text-soft-gray bg-pale-sky px-3 py-2 rounded-l-md border border-r-0 border-silver">{domain}memorial/</span>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, ''))}
-              className="block w-full rounded-r-md bg-white border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue sm:text-sm text-deep-navy px-3 py-2"
-              required
-            />
+          <div>
+            <div className="flex items-center">
+              <span className="text-soft-gray bg-pale-sky px-3 py-2 rounded-l-md border border-r-0 border-silver">{domain}memorial/</span>
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, ''))}
+                className="block w-full rounded-r-md bg-white border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue sm:text-sm text-deep-navy px-3 py-2"
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
           <div className="flex justify-end space-x-3">
             <button
@@ -52,9 +69,10 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({ isOpen, onClose, currentSlu
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-dusty-blue hover:opacity-90 text-white font-bold rounded-lg"
+              disabled={isLoading}
+              className="px-4 py-2 bg-dusty-blue hover:opacity-90 text-white font-bold rounded-lg disabled:bg-soft-gray"
             >
-              Save Address
+              {isLoading ? 'Saving...' : 'Save Address'}
             </button>
           </div>
         </form>

@@ -1,110 +1,109 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { auth, db } from '../firebase';
-import { 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
-  User as FirebaseUser
-} from 'firebase/auth';
-// FIX: Imported 'updateDoc' to fix "Cannot find name 'updateDoc'" error.
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-
 
 interface AuthContextType {
   isLoggedIn: boolean;
   currentUser: User | null;
   loading: boolean;
   isAdmin: boolean;
-  signup: (name: string, email: string, password: string) => Promise<User>;
-  login: (email: string, password: string) => Promise<User>;
-  googleLogin: () => Promise<User>;
-  logout: () => Promise<void>;
-  updateCurrentUser: (data: Partial<Omit<User, 'id' | 'email' | 'role'>>) => Promise<void>;
+  signup: (name: string, email: string, password: string) => User;
+  login: (email: string, password: string) => User;
+  googleLogin: () => User;
+  logout: () => void;
+  updateCurrentUser: (data: Partial<Omit<User, 'id' | 'email' | 'role'>>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USERS_STORAGE_KEY = 'users_mock';
+const CURRENT_USER_STORAGE_KEY = 'current_user';
+
+const getMockUsers = (): User[] => {
+    try {
+      const storedUsers = window.localStorage.getItem(USERS_STORAGE_KEY);
+      return storedUsers ? JSON.parse(storedUsers) : [
+          { id: 'admin_user', name: 'Admin User', email: 'admin@example.com', plan: 'eternal', role: 'admin', createdAt: Date.now() },
+          { id: 'demo_user', name: 'Demo User', email: 'user@example.com', plan: 'free', role: 'user', createdAt: Date.now() }
+      ];
+    } catch (e) { return []; }
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>(getMockUsers);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+        const storedUser = window.localStorage.getItem(CURRENT_USER_STORAGE_KEY);
+        return storedUser ? JSON.parse(storedUser) : null;
+    } catch (e) { return null; }
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setCurrentUser({ id: userDoc.id, ...userDoc.data() } as User);
-        } else {
-          // This case might happen with social logins for the first time
-          // Or if the user doc was deleted. We can create it here.
-           const newUser = await createUserProfile(firebaseUser, firebaseUser.displayName || "New User");
-           setCurrentUser(newUser);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  }, [users]);
   
-  const createUserProfile = async (firebaseUser: FirebaseUser, name: string): Promise<User> => {
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const newUser: Omit<User, 'id'> = {
-          name: name,
-          email: firebaseUser.email!,
-          plan: 'free',
-          role: 'user',
-          createdAt: Date.now()
-      };
-      await setDoc(userDocRef, newUser);
-      return { id: firebaseUser.uid, ...newUser };
-  };
-
-  const login = async (email: string, password: string): Promise<User> => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const userDocRef = doc(db, 'users', userCredential.user.uid);
-    const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists()) throw new Error("User profile not found.");
-    return { id: userDoc.id, ...userDoc.data() } as User;
-  };
-  
-  const googleLogin = async (): Promise<User> => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (userDoc.exists()) {
-        return { id: userDoc.id, ...userDoc.data() } as User;
+  useEffect(() => {
+    if (currentUser) {
+        window.localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(currentUser));
     } else {
-        return await createUserProfile(user, user.displayName || 'Google User');
+        window.localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
     }
+    // Simulate loading finishing
+    setLoading(false);
+  }, [currentUser]);
+
+  const login = (email: string, password: string): User => {
+    const user = users.find(u => u.email === email);
+    if (user) { // In a real app, you'd check the password
+      setCurrentUser(user);
+      return user;
+    }
+    throw new Error('Invalid email or password');
+  };
+  
+  const googleLogin = (): User => {
+    let user = users.find(u => u.email === 'google_user@example.com');
+    if (!user) {
+        user = {
+            id: `user_${Date.now()}`,
+            name: 'Google User',
+            email: 'google_user@example.com',
+            plan: 'free',
+            role: 'user',
+            createdAt: Date.now()
+        };
+        setUsers(prev => [...prev, user]);
+    }
+    setCurrentUser(user);
+    return user;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<User> => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const newUser = await createUserProfile(userCredential.user, name);
+  const signup = (name: string, email: string, password: string): User => {
+    if (users.some(u => u.email === email)) {
+      throw new Error('An account with this email already exists.');
+    }
+    const newUser: User = {
+      id: `user_${Date.now()}`,
+      name,
+      email,
+      plan: 'free',
+      role: 'user',
+      createdAt: Date.now()
+    };
+    setUsers(prev => [...prev, newUser]);
+    setCurrentUser(newUser);
     return newUser;
   };
   
-  const logout = async () => {
-    await signOut(auth);
+  const logout = () => {
+    setCurrentUser(null);
   };
   
-  const updateCurrentUser = async (data: Partial<Omit<User, 'id' | 'email' | 'role'>>) => {
+  const updateCurrentUser = (data: Partial<Omit<User, 'id' | 'email' | 'role'>>) => {
     if (currentUser) {
-        const userDocRef = doc(db, 'users', currentUser.id);
-        await updateDoc(userDocRef, data);
-        setCurrentUser(prev => prev ? { ...prev, ...data } : null);
+      const updatedUser = { ...currentUser, ...data };
+      setCurrentUser(updatedUser);
+      setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
     }
   };
 
@@ -113,8 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={value}>
-      {/* FIX: Corrected typo in closing tag. */}
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

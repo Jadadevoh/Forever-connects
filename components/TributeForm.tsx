@@ -40,7 +40,7 @@ const TributeForm: React.FC<TributeFormProps> = ({ memorialId, fullName }) => {
 
   const handleSuggestionClick = (suggestion: string) => { setMessage(suggestion); }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (author.trim() && message.trim()) {
       setIsSubmitting(true);
@@ -50,13 +50,12 @@ const TributeForm: React.FC<TributeFormProps> = ({ memorialId, fullName }) => {
           photo: photo || undefined,
       };
 
-      await addTribute(memorialId, tributeData);
+      addTribute(memorialId, tributeData);
 
       const memorial = getMemorialById(memorialId);
       if (memorial && memorial.userId) {
           const owner = users.find(u => u.id === memorial.userId);
           if (owner) {
-              // FIX: Construct a complete tribute object for the email notification to satisfy the type.
               const fullTributeData: Omit<Tribute, 'id' | 'createdAt'> = { ...tributeData, likes: 0 };
               sendNewTributeNotification(memorial, fullTributeData, owner, apiSettings, siteSettings.siteName);
           }

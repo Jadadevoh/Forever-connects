@@ -2,8 +2,6 @@ import React from 'react';
 import { Tribute } from '../types';
 import { useMemorials } from '../hooks/useMemorials';
 import { useAuth } from '../hooks/useAuth';
-// FIX: Import Timestamp to correctly handle date objects from Firestore.
-import { Timestamp } from 'firebase/firestore';
 
 interface TributeListProps {
   tributes: Tribute[];
@@ -18,11 +16,9 @@ const TributeList: React.FC<TributeListProps> = ({ tributes, memorialId }) => {
     return <p className="text-center text-soft-gray mt-8">Be the first to leave a tribute.</p>;
   }
 
-  const formatTributeDate = (timestamp: Timestamp) => {
-    // FIX: Handle Firestore Timestamp object correctly.
+  const formatTributeDate = (timestamp: number) => {
     if (!timestamp) return 'Just now';
-    const date = timestamp.toDate();
-    return date.toLocaleDateString('en-US', {
+    return new Date(timestamp).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   };
@@ -33,7 +29,6 @@ const TributeList: React.FC<TributeListProps> = ({ tributes, memorialId }) => {
         <div key={tribute.id} className="p-4 bg-pale-sky rounded-lg border border-silver flex flex-col sm:flex-row sm:space-x-4">
           {tribute.photo && (
             <div className="flex-shrink-0 w-full sm:w-32 sm:h-32 mb-4 sm:mb-0">
-                {/* FIX: Changed dataUrl to url to match Photo type. */}
                 <img src={tribute.photo.url} alt="Tribute attachment" className="w-full h-full object-cover rounded-md" />
             </div>
           )}
@@ -44,12 +39,11 @@ const TributeList: React.FC<TributeListProps> = ({ tributes, memorialId }) => {
                     <span className="font-semibold text-deep-navy/80">{tribute.author}</span>
                     <span className="mx-1 hidden sm:inline">&ndash;</span>
                     <br className="sm:hidden" />
-                    {/* FIX: Handle potential null value and convert Timestamp correctly. */}
-                    <time dateTime={tribute.createdAt?.toDate().toISOString()}>{formatTributeDate(tribute.createdAt)}</time>
+                    <time dateTime={new Date(tribute.createdAt).toISOString()}>{formatTributeDate(tribute.createdAt)}</time>
                 </div>
                 <div className="flex items-center space-x-2">
                     <button 
-                        onClick={() => currentUser && toggleLike(memorialId, tribute.id, currentUser.id)} 
+                        onClick={() => toggleLike(memorialId, tribute.id)} 
                         disabled={!currentUser}
                         className={`p-1 rounded-full transition-colors duration-200 text-soft-gray hover:text-red-500 hover:bg-red-100`}
                         aria-label="Like tribute"

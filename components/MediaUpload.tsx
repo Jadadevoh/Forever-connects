@@ -1,8 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { MediaItem } from '../types';
-import { storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useAuth } from '../hooks/useAuth';
 
 interface MediaUploadProps {
   onMediaUpload: (items: MediaItem[]) => void;
@@ -21,20 +18,13 @@ const getFileType = (file: File): MediaItem['type'] | null => {
 const MediaUpload: React.FC<MediaUploadProps> = ({ onMediaUpload, multiple }) => {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { currentUser } = useAuth();
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     setError(null);
     setIsProcessing(true);
-    
-    if (!currentUser) {
-        setError("You must be logged in to upload files.");
-        setIsProcessing(false);
-        return;
-    }
     
     const filesArray: File[] = Array.from(files);
     const validFiles = filesArray.filter((f) => getFileType(f));
@@ -48,32 +38,45 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ onMediaUpload, multiple }) =>
       return;
     }
 
-    try {
-        const uploadPromises = validFiles.map(async (file) => {
-            const fileType = getFileType(file)!;
-            const storageRef = ref(storage, `media/${currentUser.id}/${fileType}s/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            const newMediaItem: MediaItem = {
-                id: snapshot.ref.fullPath,
-                url: downloadURL,
+    const fileProcessingPromises = validFiles.map(file => {
+      return new Promise<MediaItem>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          if (e.target?.result) {
+            const fileType = getFileType(file);
+            if (fileType) {
+              const newMediaItem: MediaItem = {
+                id: `media_${Date.now()}_${Math.random()}`,
+                url: e.target.result as string,
                 type: fileType,
                 fileName: file.name
-            };
-            return newMediaItem;
-        });
+              };
+              resolve(newMediaItem);
+            } else {
+              reject(new Error('Unsupported file type.'));
+            }
+          } else {
+            reject(new Error('Failed to read file.'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Error reading file.'));
+        reader.readAsDataURL(file);
+      });
+    });
 
-        const items = await Promise.all(uploadPromises);
+    Promise.all(fileProcessingPromises)
+      .then(items => {
         onMediaUpload(items);
-    } catch (err) {
+        setIsProcessing(false);
+        event.target.value = ''; // Reset file input
+      })
+      .catch(err => {
         console.error(err);
         setError('Error processing files. Please try again.');
-    } finally {
         setIsProcessing(false);
-        event.target.value = '';
-    }
+      });
 
-  }, [onMediaUpload, currentUser]);
+  }, [onMediaUpload]);
   
   return (
     <div>
@@ -82,7 +85,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ onMediaUpload, multiple }) =>
            {isProcessing ? (
             <div className="flex flex-col items-center justify-center">
               <svg className="animate-spin h-12 w-12 text-dusty-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <p className="text-sm text-soft-gray mt-2">Uploading...</p>
+              <p className="text-sm text-soft-gray mt-2">Processing...</p>
             </div>
            ) : (
             <>

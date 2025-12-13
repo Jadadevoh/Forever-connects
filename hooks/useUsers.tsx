@@ -1,39 +1,31 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User } from '../types';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-
 
 interface UsersContextType {
   users: User[];
-  updateUser: (userId: string, updatedData: Partial<User>) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
+  updateUser: (userId: string, updatedData: Partial<User>) => void;
+  deleteUser: (userId: string) => void;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
+// In a non-Firebase version, this context is less dynamic and might not be strictly necessary,
+// but we keep it for consistency and to allow the admin panel to function as designed.
+const initialUsers: User[] = [
+    { id: 'admin_user', name: 'Admin User', email: 'admin@example.com', plan: 'eternal', role: 'admin' },
+    { id: 'demo_user', name: 'Demo User', email: 'user@example.com', plan: 'free', role: 'user' }
+];
+
+
 export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(initialUsers);
 
-  useEffect(() => {
-    const usersCollectionRef = collection(db, 'users');
-    const unsubscribe = onSnapshot(usersCollectionRef, (snapshot) => {
-        const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
-        setUsers(usersList);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const updateUser = async (userId: string, updatedData: Partial<User>) => {
-    const userDocRef = doc(db, 'users', userId);
-    await updateDoc(userDocRef, updatedData);
+  const updateUser = (userId: string, updatedData: Partial<User>) => {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatedData } : u));
   };
 
-  const deleteUser = async (userId: string) => {
-    // Note: Deleting a user document in Firestore does not delete their Auth record.
-    // A cloud function is needed to do that properly. This just removes their profile.
-    const userDocRef = doc(db, 'users', userId);
-    await deleteDoc(userDocRef);
+  const deleteUser = (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
   };
 
   return (

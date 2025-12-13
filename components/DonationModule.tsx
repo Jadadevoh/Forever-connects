@@ -52,12 +52,13 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
             return;
         }
 
-        const donationData: Omit<Donation, 'id' | 'date'> = {
+        const donationData: Omit<Donation, 'id'> = {
             name: isAnonymous ? 'Anonymous' : name,
             email: email,
             amount: finalAmount,
             message: message,
             isAnonymous: isAnonymous,
+            date: Date.now(),
             type: donationType,
             payoutStatus: 'pending',
         };
@@ -66,8 +67,7 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
 
         // --- Email Notifications ---
         const owner = users.find(u => u.id === memorial.userId);
-        // FIX: Create a full donation object with a valid date (number) for email notifications.
-        const fullDonationData: Donation = { ...donationData, id: '', date: Date.now(), payoutStatus: 'pending' }; // for receipt
+        const fullDonationData: Donation = { ...donationData, id: '', payoutStatus: 'pending' }; // for receipt
         sendDonationReceipt(email, fullDonationData, memorial, apiSettings, siteSettings.siteName);
         if (owner) {
             sendDonationNotification(fullDonationData, memorial, owner, apiSettings, siteSettings.siteName);
@@ -94,7 +94,6 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
             {/* Left Side: Info & Form */}
             <div>
                  <div className="flex items-start space-x-4 mb-4">
-                    {/* FIX: Changed dataUrl to url to match Photo type. */}
                     <img src={memorial.profileImage.url} alt="In memory of" className="w-16 h-16 object-cover rounded-full" />
                     <div>
                         <h2 className="text-2xl font-serif font-bold text-deep-navy">Support this Memorial</h2>

@@ -1,8 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { Photo } from '../types';
-import { storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useAuth } from '../hooks/useAuth';
 
 interface PhotoUploadProps {
   onPhotosUpload: (photos: Photo[]) => void;
@@ -13,9 +10,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotosUpload, multiple }) =
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { currentUser } = useAuth();
 
-  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -31,36 +27,40 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotosUpload, multiple }) =
       setIsLoading(false);
       return;
     }
-    
-    if (!currentUser) {
-        setError("You must be logged in to upload files.");
-        setIsLoading(false);
-        return;
-    }
 
-    try {
-        const uploadPromises = imageFiles.map(async (file) => {
-            const storageRef = ref(storage, `images/${currentUser.id}/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+    const fileProcessingPromises = imageFiles.map(file => {
+      return new Promise<Photo>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          if (e.target?.result) {
             const newPhoto: Photo = {
-                id: snapshot.ref.fullPath,
-                url: downloadURL,
-                caption: ''
+              id: `photo_${Date.now()}_${Math.random()}`,
+              url: e.target.result as string,
+              caption: ''
             };
-            return newPhoto;
-        });
-
-        const photos = await Promise.all(uploadPromises);
+            resolve(newPhoto);
+          } else {
+            reject(new Error('Failed to read file.'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Error reading file.'));
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    Promise.all(fileProcessingPromises)
+      .then(photos => {
         onPhotosUpload(photos);
         setPreviews(photos.map(p => p.url));
-    } catch (err) {
+        setIsLoading(false);
+      })
+      .catch(err => {
         console.error(err);
         setError('Error processing images. Please try again.');
-    } finally {
         setIsLoading(false);
-    }
-  }, [onPhotosUpload, currentUser]);
+      });
+
+  }, [onPhotosUpload]);
   
   return (
     <div>
@@ -69,7 +69,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onPhotosUpload, multiple }) =
           {isLoading ? (
             <div className="flex flex-col items-center justify-center">
               <svg className="animate-spin h-12 w-12 text-dusty-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <p className="text-sm text-soft-gray mt-2">Uploading...</p>
+              <p className="text-sm text-soft-gray mt-2">Processing...</p>
             </div>
           ) : (
             <>

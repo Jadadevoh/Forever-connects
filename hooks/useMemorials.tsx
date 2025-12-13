@@ -1,29 +1,25 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Memorial, Tribute, Donation, Photo } from '../types';
-import { db } from '../firebase';
-import { 
-    collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, onSnapshot, 
-    serverTimestamp, setDoc, getDoc, orderBy
-} from 'firebase/firestore';
 
 interface MemorialsContextType {
   memorials: Memorial[];
-  loading: boolean;
-  addMemorial: (memorialData: Omit<Memorial, 'id' | 'slug'>) => Promise<Memorial>;
+  addMemorial: (memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes'>) => Memorial;
   getMemorialById: (id: string) => Memorial | undefined;
   getMemorialBySlug: (slug: string) => Memorial | undefined;
-  addTribute: (memorialId: string, tributeData: { author: string; message: string; photo?: Photo }) => Promise<void>;
-  toggleLike: (memorialId: string, tributeId: string, userId: string) => Promise<void>;
-  deleteMemorial: (memorialId: string) => Promise<void>;
-  updateMemorial: (id: string, updatedData: Partial<Memorial>) => Promise<void>;
-  updateMemorialSlug: (id: string, newSlug: string) => Promise<{ success: boolean, message: string }>;
-  addDonation: (memorialId: string, donation: Omit<Donation, 'id' | 'date'>) => Promise<void>;
-  updateDonationsStatusForOwner: (ownerId: string, newStatus: 'paid') => Promise<void>;
+  addTribute: (memorialId: string, tributeData: Omit<Tribute, 'id' | 'createdAt' | 'likes'>) => void;
+  toggleLike: (memorialId: string, tributeId: string) => void;
+  deleteMemorial: (memorialId: string) => void;
+  updateMemorial: (id: string, updatedData: Partial<Memorial>) => void;
+  updateMemorialSlug: (id: string, newSlug: string) => { success: boolean, message: string };
+  addDonation: (memorialId: string, donation: Omit<Donation, 'id'>) => void;
+  updateDonationsStatusForOwner: (ownerId: string, newStatus: 'paid') => void;
 }
 
 const MemorialsContext = createContext<MemorialsContextType | undefined>(undefined);
 
-const generateSlug = async (firstName: string, lastName: string, deathDate: string): Promise<string> => {
+const MEMORIALS_STORAGE_KEY = 'memorials_data';
+
+const generateSlug = (firstName: string, lastName: string, deathDate: string, existingMemorials: Memorial[]): string => {
     const deathYear = new Date(deathDate).getFullYear();
     let baseSlug = `${firstName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${lastName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
     if (deathYear && !isNaN(deathYear)) {
@@ -32,13 +28,7 @@ const generateSlug = async (firstName: string, lastName: string, deathDate: stri
 
     let finalSlug = baseSlug;
     let counter = 2;
-    // Check for uniqueness in Firestore
-    while (true) {
-        const q = query(collection(db, 'memorials'), where("slug", "==", finalSlug));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            break;
-        }
+    while (existingMemorials.some(m => m.slug === finalSlug)) {
         finalSlug = `${baseSlug}-${counter}`;
         counter++;
     }
@@ -46,32 +36,34 @@ const generateSlug = async (firstName: string, lastName: string, deathDate: stri
 };
 
 export const MemorialsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [memorials, setMemorials] = useState<Memorial[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [memorials, setMemorials] = useState<Memorial[]>(() => {
+    try {
+      const storedMemorials = window.localStorage.getItem(MEMORIALS_STORAGE_KEY);
+      return storedMemorials ? JSON.parse(storedMemorials) : [];
+    } catch (error) {
+      console.error("Error reading memorials from localStorage", error);
+      return [];
+    }
+  });
 
   useEffect(() => {
-    setLoading(true);
-    const q = query(collection(db, "memorials"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const memorialsData: Memorial[] = [];
-      querySnapshot.forEach((doc) => {
-        memorialsData.push({ id: doc.id, ...doc.data() } as Memorial);
-      });
-      setMemorials(memorialsData);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    try {
+      window.localStorage.setItem(MEMORIALS_STORAGE_KEY, JSON.stringify(memorials));
+    } catch (error) {
+      console.error("Error writing memorials to localStorage", error);
+    }
+  }, [memorials]);
 
 
-  const addMemorial = async (memorialData: Omit<Memorial, 'id' | 'slug'>): Promise<Memorial> => {
+  const addMemorial = (memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes'>): Memorial => {
+    const newSlug = generateSlug(memorialData.firstName, memorialData.lastName, memorialData.deathDate, memorials);
     const fullName = [memorialData.firstName, memorialData.middleName, memorialData.lastName].filter(Boolean).join(' ');
-    const newSlug = await generateSlug(memorialData.firstName, memorialData.lastName, memorialData.deathDate);
     
-    const newMemorialData: Omit<Memorial, 'id'> = {
+    const newMemorial: Memorial = {
       ...memorialData,
+      id: `mem_${Date.now()}`,
       slug: newSlug,
+      tributes: [],
       plan: memorialData.plan || 'free',
       donations: [],
       donationInfo: memorialData.donationInfo || {
@@ -85,9 +77,8 @@ export const MemorialsProvider: React.FC<{ children: ReactNode }> = ({ children 
       status: memorialData.status || 'active',
       createdAt: Date.now(),
     };
-
-    const docRef = await addDoc(collection(db, 'memorials'), newMemorialData);
-    return { id: docRef.id, ...newMemorialData };
+    setMemorials(prev => [...prev, newMemorial]);
+    return newMemorial;
   };
 
   const getMemorialById = useCallback((id: string) => {
@@ -98,79 +89,65 @@ export const MemorialsProvider: React.FC<{ children: ReactNode }> = ({ children 
     return memorials.find(m => m.slug === slug);
   }, [memorials]);
 
-  const addTribute = async (memorialId: string, tributeData: { author: string; message: string; photo?: Photo }) => {
-    const tributesCollectionRef = collection(db, 'memorials', memorialId, 'tributes');
-    await addDoc(tributesCollectionRef, {
-        ...tributeData,
-        createdAt: serverTimestamp(),
-        // FIX: Initialize likes to 0 for new tributes.
-        likes: 0,
-    });
+  const addTribute = (memorialId: string, tributeData: Omit<Tribute, 'id' | 'createdAt' | 'likes'>) => {
+    const newTribute: Tribute = {
+      ...tributeData,
+      id: `trib_${Date.now()}`,
+      createdAt: Date.now(),
+      likes: 0,
+    };
+    setMemorials(prev => prev.map(m => m.id === memorialId ? { ...m, tributes: [newTribute, ...m.tributes] } : m));
   };
 
-  const toggleLike = async (memorialId: string, tributeId: string, userId: string) => {
-    const likeDocRef = doc(db, 'memorials', memorialId, 'tributes', tributeId, 'likes', userId);
-    const likeDoc = await getDoc(likeDocRef);
-
-    if (likeDoc.exists()) {
-        await deleteDoc(likeDocRef);
-    } else {
-        await setDoc(likeDocRef, { likedAt: serverTimestamp() });
-    }
+  const toggleLike = (memorialId: string, tributeId: string) => {
+    setMemorials(prev => prev.map(m => {
+        if (m.id === memorialId) {
+            const updatedTributes = m.tributes.map(t => t.id === tributeId ? { ...t, likes: t.likes + 1 } : t);
+            return { ...m, tributes: updatedTributes };
+        }
+        return m;
+    }));
   };
 
-  const deleteMemorial = async (memorialId: string) => {
-    await deleteDoc(doc(db, 'memorials', memorialId));
+  const deleteMemorial = (memorialId: string) => {
+    setMemorials(prev => prev.filter(m => m.id !== memorialId));
   };
 
-  const updateMemorial = async (id: string, updatedData: Partial<Memorial>) => {
-    const memorialDocRef = doc(db, 'memorials', id);
-    await updateDoc(memorialDocRef, updatedData);
+  const updateMemorial = (id: string, updatedData: Partial<Memorial>) => {
+    setMemorials(prev => prev.map(m => m.id === id ? { ...m, ...updatedData } : m));
   };
 
-  const updateMemorialSlug = async (id: string, newSlug: string): Promise<{ success: boolean; message: string }> => {
+  const updateMemorialSlug = (id: string, newSlug: string): { success: boolean; message: string } => {
     const formattedSlug = newSlug.toLowerCase().replace(/[^a-z0-9-]+/g, '');
     if (!formattedSlug) {
         return { success: false, message: "Web address cannot be empty and must contain letters, numbers, or hyphens." };
     }
-    const q = query(collection(db, 'memorials'), where("slug", "==", formattedSlug));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty && querySnapshot.docs[0].id !== id) {
+    if (memorials.some(m => m.slug === formattedSlug && m.id !== id)) {
         return { success: false, message: "This web address is already in use. Please choose another." };
     }
-    await updateMemorial(id, { slug: formattedSlug });
+    updateMemorial(id, { slug: formattedSlug });
     return { success: true, message: "Web address updated successfully!" };
   };
 
-  const addDonation = async (memorialId: string, donation: Omit<Donation, 'id' | 'date'>) => {
-    const newDonation: Omit<Donation, 'id'> = {
-        ...donation,
-        date: Date.now(),
-    };
-    const memorialDocRef = doc(db, 'memorials', memorialId);
-    const memorialDoc = await getDoc(memorialDocRef);
-    if (memorialDoc.exists()) {
-        const currentDonations = memorialDoc.data().donations || [];
-        await updateDoc(memorialDocRef, {
-            donations: [...currentDonations, newDonation]
-        });
-    }
+  const addDonation = (memorialId: string, donation: Omit<Donation, 'id'>) => {
+    const newDonation = { ...donation, id: `don_${Date.now()}`};
+    setMemorials(prev => prev.map(m => m.id === memorialId ? { ...m, donations: [...m.donations, newDonation] } : m));
   };
 
-  const updateDonationsStatusForOwner = async (ownerId: string, newStatus: 'paid') => {
-      const q = query(collection(db, 'memorials'), where('userId', '==', ownerId));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(async (memorialDoc) => {
-          const memorialData = memorialDoc.data() as Memorial;
-          const updatedDonations = memorialData.donations.map(d => 
-              d.payoutStatus === 'pending' ? { ...d, payoutStatus: newStatus } : d
-          );
-          await updateDoc(memorialDoc.ref, { donations: updatedDonations });
-      });
+  const updateDonationsStatusForOwner = (ownerId: string, newStatus: 'paid') => {
+      setMemorials(prev => prev.map(m => {
+          if (m.userId === ownerId) {
+              const updatedDonations = m.donations.map(d => 
+                  d.payoutStatus === 'pending' ? { ...d, payoutStatus: newStatus } : d
+              );
+              return { ...m, donations: updatedDonations };
+          }
+          return m;
+      }));
   };
 
   const value = { 
-    memorials, loading, addMemorial, getMemorialById, getMemorialBySlug, addTribute, 
+    memorials, addMemorial, getMemorialById, getMemorialBySlug, addTribute, 
     toggleLike, deleteMemorial, updateMemorial, updateMemorialSlug, addDonation,
     updateDonationsStatusForOwner
   };

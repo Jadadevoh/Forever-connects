@@ -1,5 +1,3 @@
-import { Timestamp } from "firebase/firestore";
-
 export interface SiteSettings {
   siteName: string;
   logoUrl: string;
@@ -48,9 +46,8 @@ export interface Tribute {
   id: string;
   author: string;
   message: string;
-  createdAt: Timestamp;
+  createdAt: number;
   photo?: Photo;
-  // FIX: Added 'likes' property to match usage in components like TributeList.
   likes: number;
 }
 
@@ -101,6 +98,7 @@ export interface Memorial {
   profileImage: Photo;
   biography: string;
   gallery: GalleryItem[];
+  tributes: Tribute[];
   theme: string;
   plan: MemorialPlan;
   donationInfo: DonationInfo;

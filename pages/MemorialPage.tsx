@@ -8,9 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 import DonationModule from '../components/DonationModule';
 import ShareModal from '../components/ShareModal';
 import EditUrlModal from '../components/EditUrlModal';
-// FIX: Import firestore functions to fetch tributes subcollection.
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
 
 const getAge = (birthDate: string, deathDate: string): number => {
     const start = new Date(birthDate);
@@ -28,13 +25,9 @@ const formatDate = (dateString: string) => {
 
 const renderGalleryItem = (item: GalleryItem) => {
     switch (item.type) {
-        // FIX: Changed dataUrl to url to match MediaItem type.
         case 'image': return <div className="aspect-w-1 aspect-h-1 flex-shrink-0 w-full"><img src={item.url} alt={item.caption || 'A cherished memory'} className="w-full h-full object-cover rounded-lg shadow-sm" /></div>;
-        // FIX: Changed dataUrl to url to match MediaItem type.
         case 'video': return <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg shadow-sm overflow-hidden flex-shrink-0 w-full"><video src={item.url} controls className="w-full h-full object-contain" /></div>;
-        // FIX: Changed dataUrl to url to match MediaItem type.
         case 'audio': return <div className="p-4 bg-pale-sky rounded-lg shadow-sm border border-silver flex-shrink-0 w-full"><h4 className="text-sm font-semibold text-deep-navy truncate mb-2">{item.fileName}</h4><audio src={item.url} controls className="w-full" /></div>;
-        // FIX: Changed dataUrl to url to match MediaItem type.
         case 'document': return <a href={item.url} target="_blank" rel="noopener noreferrer" download={item.fileName} className="block p-4 bg-pale-sky rounded-lg shadow-sm border border-silver hover:bg-silver transition-colors h-full flex-shrink-0 w-full"><div className="flex items-center space-x-3"><svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-dusty-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><p className="text-sm font-semibold text-deep-navy break-all">{item.fileName}</p></div></a>;
         case 'link': return <a href={item.url} target="_blank" rel="noopener noreferrer" className="block p-4 bg-pale-sky rounded-lg shadow-sm border border-silver hover:bg-silver transition-colors h-full flex-shrink-0 w-full"><div className="flex items-center space-x-3"><svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-dusty-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg><div className="overflow-hidden"><p className="text-sm font-semibold text-deep-navy truncate">{item.title}</p><p className="text-xs text-soft-gray truncate">{item.url}</p></div></div></a>;
         default: return null;
@@ -56,68 +49,37 @@ const GallerySlider: React.FC<{items: GalleryItem[]}> = ({items}) => {
 
 const ClassicLayout: React.FC<{memorial: Memorial, fullName: string}> = ({memorial, fullName}) => {
     const locationString = [memorial.city, memorial.state, memorial.country].filter(Boolean).join(', ');
-    // FIX: Changed dataUrl to url to match Photo type.
     return <div className="p-8"><header className="text-center mb-10"><img src={memorial.profileImage.url} alt={fullName} className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full mx-auto shadow-lg border-4 border-white -mb-16 relative z-10" /></header><div className="bg-pale-sky/50 rounded-lg p-8 pt-20 -mt-16 border border-silver"><div className="text-center"><h1 className="text-4xl md:text-5xl font-serif font-bold text-deep-navy">{fullName}</h1><p className="text-lg text-soft-gray mt-2">{formatDate(memorial.birthDate)} &ndash; {formatDate(memorial.deathDate)}</p><p className="text-md text-soft-gray mt-1">{locationString} &bull; Aged {getAge(memorial.birthDate, memorial.deathDate)}{memorial.gender && memorial.gender !== 'Prefer not to say' && ` • ${memorial.gender}`}</p>{memorial.causeOfDeath.length > 0 && !memorial.isCauseOfDeathPrivate && <p className="text-sm text-soft-gray mt-2">Cause of Death: {memorial.causeOfDeath.join(', ')}</p>}</div><section className="mt-10"><h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Life Story</h2><div className="prose-styles text-base md:text-lg text-deep-navy/90 leading-relaxed" dangerouslySetInnerHTML={{ __html: memorial.biography }} /></section>{memorial.gallery.length > 0 && <section className="mt-10"><h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Media Gallery</h2><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{memorial.gallery.map(item => <div key={item.id}>{renderGalleryItem(item)}</div>)}</div></section>}</div></div>;
 };
 
 const StoryLayout: React.FC<{memorial: Memorial, fullName: string}> = ({memorial, fullName}) => {
     const locationString = [memorial.city, memorial.state, memorial.country].filter(Boolean).join(', ');
-    // FIX: Changed dataUrl to url to match Photo type.
     return <div className="p-8"><section className="grid md:grid-cols-3 gap-8 md:gap-12 items-start"><div className="md:col-span-1 text-center md:text-left"><img src={memorial.profileImage.url} alt={fullName} className="w-40 h-40 object-cover rounded-full mx-auto md:mx-0 shadow-lg border-4 border-white" /><h1 className="text-4xl font-serif font-bold text-deep-navy mt-4">{fullName}</h1><p className="text-lg text-soft-gray mt-2">{formatDate(memorial.birthDate)} &ndash; {formatDate(memorial.deathDate)}</p><p className="text-md text-soft-gray mt-1">{locationString} &bull; Aged {getAge(memorial.birthDate, memorial.deathDate)}{memorial.gender && memorial.gender !== 'Prefer not to say' && ` • ${memorial.gender}`}</p>{memorial.causeOfDeath.length > 0 && !memorial.isCauseOfDeathPrivate && <p className="text-sm text-soft-gray mt-2">Cause of Death: {memorial.causeOfDeath.join(', ')}</p>}</div><div className="md:col-span-2"><h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Life Story</h2><div className="prose-styles text-base md:text-lg text-deep-navy/90 leading-relaxed" dangerouslySetInnerHTML={{ __html: memorial.biography }} /></div></section>{memorial.gallery.length > 0 && <section className="mt-10"><h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Media Gallery</h2><GallerySlider items={memorial.gallery} /></section>}</div>;
 }
 
 const MemorialPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getMemorialBySlug, updateMemorialSlug, loading: memorialsLoading, memorials } = useMemorials();
+  const { getMemorialBySlug, updateMemorialSlug } = useMemorials();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   
   const memorial = slug ? getMemorialBySlug(slug) : null;
+  const tributes = memorial ? memorial.tributes : [];
 
-  const [tributes, setTributes] = useState<Tribute[]>([]);
   const [activeTab, setActiveTab] = useState<'story' | 'tribute' | 'support' | 'gallery'>('story');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isEditUrlModalOpen, setIsEditUrlModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!memorialsLoading && !memorial) {
-      // Logic to handle not found
-    }
-  }, [slug, memorial, memorialsLoading]);
-
-  // FIX: Tributes are in a subcollection and must be fetched separately.
-  useEffect(() => {
-    if (!memorial) return;
-
-    const tributesQuery = query(
-        collection(db, 'memorials', memorial.id, 'tributes'),
-        orderBy('createdAt', 'desc')
-    );
-    
-    const unsubscribe = onSnapshot(tributesQuery, (snapshot) => {
-        const tributesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Tribute));
-        setTributes(tributesData);
-    });
-
-    return () => unsubscribe();
-  }, [memorial]);
-
-
   const isOwner = currentUser && memorial && currentUser.id === memorial.userId;
   
-  if (memorialsLoading) { return <div className="text-center text-xl text-soft-gray p-12">Loading Memorial...</div>;}
   if (!memorial || memorial.status !== 'active') { return <div className="text-center text-xl text-soft-gray p-12">Memorial not found or is not public.</div>; }
 
-  const handleSaveSlug = async (newSlug: string) => {
-    // FIX: Added await to handle the async operation correctly.
-    const result = await updateMemorialSlug(memorial.id, newSlug);
+  const handleSaveSlug = (newSlug: string) => {
+    const result = updateMemorialSlug(memorial.id, newSlug);
     if (result.success) {
       navigate(`/memorial/${newSlug}`, { replace: true });
     }
-    return result; // Return result for modal to handle
+    return result; 
   };
 
   const fullName = [memorial.firstName, memorial.middleName, memorial.lastName].filter(Boolean).join(' ');

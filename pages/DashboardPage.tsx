@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -9,7 +8,7 @@ import EditUrlModal from '../components/EditUrlModal';
 
 const DashboardPage: React.FC = () => {
   const { isLoggedIn, currentUser, loading: authLoading } = useAuth();
-  const { memorials, loading: memorialsLoading, updateMemorialSlug } = useMemorials();
+  const { memorials, updateMemorialSlug } = useMemorials();
   const [editingUrlMemorial, setEditingUrlMemorial] = useState<Memorial | null>(null);
 
   const { myDrafts, myPublishedMemorials, publicMemorials } = useMemo(() => {
@@ -21,7 +20,7 @@ const DashboardPage: React.FC = () => {
     return { myDrafts: drafts, myPublishedMemorials: published, publicMemorials: publicMems };
   }, [memorials, currentUser]);
 
-  if (authLoading || memorialsLoading) {
+  if (authLoading) {
     return <div className="text-center p-12">Loading Dashboard...</div>;
   }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { useMemorials } from '../hooks/useMemorials';
@@ -241,7 +242,7 @@ const CreateMemorialPage: React.FC = () => {
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.profileImage) { alert("Please upload a profile image."); isEditMode ? setCurrentTab('info') : setStep(1); return; }
     if (!selectedTheme) { alert("Please select a theme for the memorial."); isEditMode ? setCurrentTab('theme') : setStep(5); return; }
@@ -253,18 +254,18 @@ const CreateMemorialPage: React.FC = () => {
             state: dataToSave.state || undefined, profileImage: formData.profileImage, theme: selectedTheme,
             status: isDraft ? 'active' : memorialToEdit?.status,
         };
-        await updateMemorial(editId, updatedData);
+        updateMemorial(editId, updatedData);
         window.localStorage.removeItem(DRAFT_STORAGE_KEY);
         navigate(`/memorial/${memorialToEdit?.slug}`);
     } else {
         if (!isLoggedIn) { setIsAuthModalOpen(true); return; }
         const { relationship, ...dataToSave } = formData;
-        const memorialData: Omit<Memorial, 'id' | 'slug'> = {
+        const memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
             ...dataToSave, gender: dataToSave.gender || undefined, userId: currentUser?.id,
             middleName: dataToSave.middleName || undefined, state: dataToSave.state || undefined,
             profileImage: formData.profileImage, theme: selectedTheme, status: 'active', donations: [],
         };
-        const newMemorial = await addMemorial(memorialData);
+        const newMemorial = addMemorial(memorialData);
         window.localStorage.removeItem(DRAFT_STORAGE_KEY);
         navigate(`/memorial/${newMemorial.slug}`);
     }
@@ -275,11 +276,13 @@ const CreateMemorialPage: React.FC = () => {
     if (!selectedTheme) { alert("Please select a theme for the memorial before continuing."); return; }
     const { relationship, ...dataToSave } = formData;
     
-    const finalData: Omit<Memorial, 'id' | 'userId' | 'slug' > = {
+    // FIX: Included 'tributes: []' and adjusted type definition to match what useGuestMemorial expects.
+    const finalData: Omit<Memorial, 'id' | 'userId' | 'slug'> = {
         ...dataToSave,
         profileImage: formData.profileImage,
         theme: selectedTheme,
         donations: [], // Start with empty donations
+        tributes: [], // Start with empty tributes
         status: 'draft',
     };
     saveGuestMemorial(finalData);
@@ -381,45 +384,6 @@ const CreateMemorialPage: React.FC = () => {
             return null;
       }
   };
-  
-    const renderTabContent = () => {
-        const tabs = [
-            { id: 'info', label: 'Basic Info' },
-            { id: 'bio', label: 'Biography' },
-            { id: 'gallery', label: 'Gallery' },
-            { id: 'donations', label: 'Donation Setup' },
-            { id: 'email', label: 'Email Settings' },
-            { id: 'theme', label: 'Theme' },
-        ];
-        return <>
-            <div className="border-b border-silver flex overflow-x-auto mb-6">
-                {tabs.map(tab => <button key={tab.id} type="button" onClick={() => setCurrentTab(tab.id)} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-2 font-semibold text-sm transition-colors ${currentTab === tab.id ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>{tab.label}</button>)}
-            </div>
-            <div className="space-y-6">
-                {(currentTab === 'info' || currentTab === 'bio' || currentTab === 'gallery') && renderStepContent(true)}
-                {currentTab === 'donations' && <div className="space-y-6">
-                    <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Donation Setup</h3>
-                    <div className="flex items-center"><input type="checkbox" name="isEnabled" checked={formData.donationInfo.isEnabled} onChange={handleDonationInfoChange} className="h-4 w-4 rounded" /><label htmlFor="isEnabled" className="ml-2 text-sm">Enable donations on this memorial</label></div>
-                    {formData.donationInfo.isEnabled && <div className="space-y-4 pt-4 border-t border-silver">
-                        <div><label htmlFor="recipient" className={labelStyles}>Donation Recipient (e.g., The Family of Jane Doe)</label><input type="text" name="recipient" value={formData.donationInfo.recipient} onChange={handleDonationInfoChange} className={inputStyles} /></div>
-                        <div><label htmlFor="purpose" className={labelStyles}>Purpose of Donations</label><select name="purpose" value={formData.donationInfo.purpose} onChange={handleDonationInfoChange} className={inputStyles}>{donationPurposes.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
-                        <div><label htmlFor="goal" className={labelStyles}>Fundraising Goal (Optional)</label><div className="relative"><div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-soft-gray sm:text-sm">$</span></div><input type="number" name="goal" value={formData.donationInfo.goal || ''} onChange={handleDonationInfoChange} className={inputStyles + " pl-7"} placeholder="0" /></div></div>
-                        <div><label htmlFor="description" className={labelStyles}>Short Description</label><textarea name="description" value={formData.donationInfo.description} onChange={handleDonationInfoChange} rows={3} className={inputStyles}></textarea></div>
-                        <div><label htmlFor="suggestedAmounts" className={labelStyles}>Suggested Donation Amounts (comma-separated)</label><input type="text" name="suggestedAmounts" value={formData.donationInfo.suggestedAmounts.join(', ')} onChange={handleSuggestedAmountsChange} className={inputStyles} placeholder="e.g. 25, 50, 100, 250" /></div>
-                        <div className="flex items-center"><input type="checkbox" name="showDonorWall" checked={formData.donationInfo.showDonorWall} onChange={handleDonationInfoChange} className="h-4 w-4 rounded" /><label htmlFor="showDonorWall" className="ml-2 text-sm">Show public donor wall on memorial page</label></div>
-                    </div>}
-                </div>}
-                {currentTab === 'email' && <div className="space-y-6">
-                     <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Email Notification Settings</h3>
-                     <div><label htmlFor="senderName" className={labelStyles}>Sender Name</label><input type="text" name="senderName" value={formData.emailSettings.senderName} onChange={handleEmailSettingsChange} className={inputStyles}/></div>
-                     <div><label htmlFor="replyToEmail" className={labelStyles}>Reply-To Email</label><input type="email" name="replyToEmail" value={formData.emailSettings.replyToEmail} onChange={handleEmailSettingsChange} className={inputStyles}/></div>
-                     <div><label htmlFor="headerImageUrl" className={labelStyles}>Email Header Logo</label><p className="text-xs text-soft-gray">Defaults to profile image. Upload a different one here.</p><PhotoUpload onPhotosUpload={handleEmailLogoUpload} multiple={false} /></div>
-                     <div><label htmlFor="footerMessage" className={labelStyles}>Custom Email Footer</label><textarea name="footerMessage" value={formData.emailSettings.footerMessage} onChange={handleEmailSettingsChange} rows={3} className={inputStyles}></textarea></div>
-                </div>}
-                {currentTab === 'theme' && renderStepContent(false)}
-            </div>
-        </>
-    };
 
     if (!isDataLoaded) return <p>Loading editor...</p>;
 

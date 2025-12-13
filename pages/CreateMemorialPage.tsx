@@ -289,40 +289,12 @@ const CreateMemorialPage: React.FC = () => {
     navigate(path, { state: { fromCreate: true } });
   };
   
-    const renderStepContent = (isTab = false) => {
-      const bioProps = {
+    const bioProps = {
         id: 'biography', name: 'biography', value: formData.biography, onChange: handleBioChange,
-      };
-      const bioSection = <div className="space-y-6">
-            <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">The Life Story</h3>
-            <div className="bg-pale-sky/60 p-4 rounded-lg border border-silver">
-                <h4 className="font-semibold text-deep-navy">AI Biography Assistant</h4>
-                <p className="text-sm text-soft-gray mb-2">Struggling for words? Provide a few details and let our AI help you write a beautiful tribute.</p>
-                <div className="space-y-3">
-                    <div><label htmlFor="relationship" className={labelStyles}>Your Relationship to Deceased</label><input type="text" name="relationship" value={formData.relationship} onChange={handleInputChange} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Daughter, Friend, Sibling" /></div>
-                    <div><label htmlFor="personalityTraits" className={labelStyles}>Personality Traits</label><textarea id="personalityTraits" value={personalityTraits} onChange={(e) => setPersonalityTraits(e.target.value)} rows={2} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Kind, adventurous, stubborn but loving"></textarea></div>
-                    <div><label htmlFor="keyMemories" className={labelStyles}>Key Memories & Life Highlights</label><textarea id="keyMemories" value={keyMemories} onChange={(e) => setKeyMemories(e.target.value)} rows={3} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="Mention hobbies, career, favorite sayings, or specific memories..."></textarea></div>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="w-full sm:w-auto px-4 py-2 bg-dusty-blue text-white font-semibold rounded-md text-sm hover:opacity-90 disabled:bg-soft-gray">{isGeneratingBio ? 'Generating...' : 'Generate Biography'}</button>
-                </div>
-            </div>
-            <div>
-                <label htmlFor="biography" className={labelStyles}>Full Biography</label>
-                <RichTextEditor {...bioProps} />
-            </div>
-        </div>;
-      
-      const gallerySection = <div className="space-y-6">
-            <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Media Gallery</h3>
-            <div><label className={labelStyles}>Upload Photos, Videos, Audio & Documents</label><MediaUpload onMediaUpload={handleMediaUpload} multiple /></div>
-            <div className="border-t border-silver pt-4"><label className={labelStyles}>Add External Links (e.g., YouTube, Social Media)</label><div className="flex items-center gap-2 mt-1"><input type="text" value={linkTitle} onChange={e => setLinkTitle(e.target.value)} placeholder="Link Title" className={inputStyles} /><input type="url" value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://example.com" className={inputStyles} /><button type="button" onClick={handleAddLink} className="px-4 py-2 bg-silver text-deep-navy font-semibold rounded-md text-sm hover:bg-soft-gray/80 whitespace-nowrap">Add Link</button></div></div>
-            {formData.gallery.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">{formData.gallery.map(item => (<div key={item.id} className="bg-pale-sky p-2 rounded-md text-sm relative"><p className="truncate pr-8">{item.type === 'link' ? item.title : item.fileName}</p><button type="button" onClick={() => handleDeleteGalleryItem(item.id)} className="absolute top-1 right-1 text-red-500 hover:text-red-700 font-bold">&times;</button></div>))}</div>}
-        </div>;
+    };
 
-      const currentStep = isTab ? 0 : step;
-
-      switch (currentStep) {
-          case 1: 
-              return <div className="space-y-6">
+    const step1Content = (
+              <div className="space-y-6">
                    <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Basic Information</h3>
                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div><label htmlFor="firstName" className={labelStyles}>First Name</label><input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required className={inputStyles} /></div>
@@ -347,9 +319,11 @@ const CreateMemorialPage: React.FC = () => {
                      </div>
                    </div>
                    <div><label htmlFor="profileImage" className={labelStyles}>Profile Image</label><PhotoUpload onPhotosUpload={handleProfileImageUpload} multiple={false} />{!formData.profileImage && <p className="text-sm text-red-500 mt-1">Profile image is required.</p>}</div>
-              </div>;
-          case 2:
-              return <div className="space-y-6">
+              </div>
+    );
+
+    const step2Content = (
+              <div className="space-y-6">
                   <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Location &amp; Details</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div><label htmlFor="city" className={labelStyles}>City</label><input type="text" name="city" value={formData.city} onChange={handleInputChange} required className={inputStyles} /></div>
@@ -365,25 +339,119 @@ const CreateMemorialPage: React.FC = () => {
                       </div>
                        <div className="mt-2 flex items-center"><input type="checkbox" name="isCauseOfDeathPrivate" checked={formData.isCauseOfDeathPrivate} onChange={handleInputChange} className="h-4 w-4 text-dusty-blue rounded border-soft-gray" /><label htmlFor="isCauseOfDeathPrivate" className="ml-2 text-sm text-deep-navy/90">Don't show on memorial page (Private)</label></div>
                   </div>
-              </div>;
-          case 3: 
-              return bioSection;
-          case 4: 
-              return gallerySection;
-          case 5:
-              return <div className="space-y-6">
-                  <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Select a Theme</h3>
-                  {isGeneratingThemes ? <p>Analyzing biography to suggest themes...</p> : <div className="space-y-4">{aiRecommendedThemes.length > 0 && <div className="space-y-2"><h4 className="font-semibold text-deep-navy">Recommended For You</h4>{aiRecommendedThemes.map(t => <ThemePreviewCard key={t.name} theme={t} isSelected={selectedTheme === t.name} isRecommended={true} onClick={() => setSelectedTheme(t.name)} />)}</div>}<div className="space-y-2 pt-4 border-t border-silver"><h4 className="font-semibold text-deep-navy">All Themes</h4>{standardThemes.map(t => <ThemePreviewCard key={t.name} theme={t} isSelected={selectedTheme === t.name} isRecommended={false} onClick={() => setSelectedTheme(t.name)} />)}</div></div>}
-              </div>;
-          default: 
-            if (isTab) {
-                if (currentTab === 'info') return renderStepContent(false);
-                if (currentTab === 'bio') return bioSection;
-                if (currentTab === 'gallery') return gallerySection;
-            }
-            return null;
-      }
-  };
+              </div>
+    );
+
+    const bioSection = (
+        <div className="space-y-6">
+            <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">The Life Story</h3>
+            <div className="bg-pale-sky/60 p-4 rounded-lg border border-silver">
+                <h4 className="font-semibold text-deep-navy">AI Biography Assistant</h4>
+                <p className="text-sm text-soft-gray mb-2">Struggling for words? Provide a few details and let our AI help you write a beautiful tribute.</p>
+                <div className="space-y-3">
+                    <div><label htmlFor="relationship" className={labelStyles}>Your Relationship to Deceased</label><input type="text" name="relationship" value={formData.relationship} onChange={handleInputChange} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Daughter, Friend, Sibling" /></div>
+                    <div><label htmlFor="personalityTraits" className={labelStyles}>Personality Traits</label><textarea id="personalityTraits" value={personalityTraits} onChange={(e) => setPersonalityTraits(e.target.value)} rows={2} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Kind, adventurous, stubborn but loving"></textarea></div>
+                    <div><label htmlFor="keyMemories" className={labelStyles}>Key Memories & Life Highlights</label><textarea id="keyMemories" value={keyMemories} onChange={(e) => setKeyMemories(e.target.value)} rows={3} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="Mention hobbies, career, favorite sayings, or specific memories..."></textarea></div>
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="w-full sm:w-auto px-4 py-2 bg-dusty-blue text-white font-semibold rounded-md text-sm hover:opacity-90 disabled:bg-soft-gray">{isGeneratingBio ? 'Generating...' : 'Generate Biography'}</button>
+                </div>
+            </div>
+            <div>
+                <label htmlFor="biography" className={labelStyles}>Full Biography</label>
+                <RichTextEditor {...bioProps} />
+            </div>
+        </div>
+    );
+      
+    const gallerySection = (
+        <div className="space-y-6">
+            <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Media Gallery</h3>
+            <div><label className={labelStyles}>Upload Photos, Videos, Audio & Documents</label><MediaUpload onMediaUpload={handleMediaUpload} multiple /></div>
+            <div className="border-t border-silver pt-4"><label className={labelStyles}>Add External Links (e.g., YouTube, Social Media)</label><div className="flex items-center gap-2 mt-1"><input type="text" value={linkTitle} onChange={e => setLinkTitle(e.target.value)} placeholder="Link Title" className={inputStyles} /><input type="url" value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://example.com" className={inputStyles} /><button type="button" onClick={handleAddLink} className="px-4 py-2 bg-silver text-deep-navy font-semibold rounded-md text-sm hover:bg-soft-gray/80 whitespace-nowrap">Add Link</button></div></div>
+            {formData.gallery.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">{formData.gallery.map(item => (<div key={item.id} className="bg-pale-sky p-2 rounded-md text-sm relative"><p className="truncate pr-8">{item.type === 'link' ? item.title : item.fileName}</p><button type="button" onClick={() => handleDeleteGalleryItem(item.id)} className="absolute top-1 right-1 text-red-500 hover:text-red-700 font-bold">&times;</button></div>))}</div>}
+        </div>
+    );
+
+    const themeSection = (
+        <div className="space-y-6">
+            <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Select a Theme</h3>
+            {isGeneratingThemes ? <p>Analyzing biography to suggest themes...</p> : <div className="space-y-4">{aiRecommendedThemes.length > 0 && <div className="space-y-2"><h4 className="font-semibold text-deep-navy">Recommended For You</h4>{aiRecommendedThemes.map(t => <ThemePreviewCard key={t.name} theme={t} isSelected={selectedTheme === t.name} isRecommended={true} onClick={() => setSelectedTheme(t.name)} />)}</div>}<div className="space-y-2 pt-4 border-t border-silver"><h4 className="font-semibold text-deep-navy">All Themes</h4>{standardThemes.map(t => <ThemePreviewCard key={t.name} theme={t} isSelected={selectedTheme === t.name} isRecommended={false} onClick={() => setSelectedTheme(t.name)} />)}</div></div>}
+        </div>
+    );
+
+    const donationSection = (
+        <div className="space-y-6">
+             <h3 className="text-xl font-serif text-deep-navy border-b border-silver pb-2">Donation Settings</h3>
+             <div className="bg-pale-sky/40 p-4 rounded-lg border border-silver">
+                <div className="flex items-center mb-4">
+                    <input type="checkbox" id="isEnabled" name="isEnabled" checked={formData.donationInfo.isEnabled} onChange={handleDonationInfoChange} className="h-5 w-5 text-dusty-blue rounded border-silver focus:ring-dusty-blue" />
+                    <label htmlFor="isEnabled" className="ml-2 block text-sm font-medium text-deep-navy">Enable Donations</label>
+                </div>
+                {formData.donationInfo.isEnabled && (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label htmlFor="recipient" className={labelStyles}>Recipient Name</label><input type="text" name="recipient" value={formData.donationInfo.recipient} onChange={handleDonationInfoChange} className={inputStyles} placeholder="Who will receive the funds?" /></div>
+                            <div><label htmlFor="goal" className={labelStyles}>Goal Amount ($)</label><input type="number" name="goal" value={formData.donationInfo.goal} onChange={handleDonationInfoChange} className={inputStyles} placeholder="Optional" /></div>
+                        </div>
+                        <div><label htmlFor="purpose" className={labelStyles}>Purpose</label><select name="purpose" value={formData.donationInfo.purpose} onChange={handleDonationInfoChange} className={inputStyles}>{donationPurposes.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
+                        <div><label htmlFor="description" className={labelStyles}>Description</label><textarea name="description" value={formData.donationInfo.description} onChange={handleDonationInfoChange} rows={3} className={inputStyles} placeholder="Explain what the donations will be used for..." /></div>
+                        <div className="flex items-center"><input type="checkbox" name="showDonorWall" checked={formData.donationInfo.showDonorWall} onChange={handleDonationInfoChange} className="h-4 w-4 text-dusty-blue rounded border-silver focus:ring-dusty-blue" /><label htmlFor="showDonorWall" className="ml-2 text-sm text-deep-navy">Show Public Donor Wall</label></div>
+                    </div>
+                )}
+             </div>
+        </div>
+    );
+
+    const renderTabContent = () => {
+        const tabs = [
+            { id: 'info', label: 'Details' },
+            { id: 'bio', label: 'Biography' },
+            { id: 'gallery', label: 'Gallery' },
+            { id: 'theme', label: 'Theme' },
+            { id: 'donations', label: 'Donations' }
+        ];
+
+        return (
+            <div className="space-y-6">
+                <div className="border-b border-silver overflow-x-auto">
+                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setCurrentTab(tab.id)}
+                                className={`${
+                                    currentTab === tab.id
+                                        ? 'border-dusty-blue text-dusty-blue'
+                                        : 'border-transparent text-soft-gray hover:text-deep-navy hover:border-gray-300'
+                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+                
+                <div className="mt-6">
+                    {currentTab === 'info' && <div className="space-y-8">{step1Content}{step2Content}</div>}
+                    {currentTab === 'bio' && bioSection}
+                    {currentTab === 'gallery' && gallerySection}
+                    {currentTab === 'theme' && themeSection}
+                    {currentTab === 'donations' && donationSection}
+                </div>
+            </div>
+        );
+    };
+
+    const renderStepContent = () => {
+        switch (step) {
+            case 1: return step1Content;
+            case 2: return step2Content;
+            case 3: return bioSection;
+            case 4: return gallerySection;
+            case 5: return themeSection;
+            default: return null;
+        }
+    };
 
     if (!isDataLoaded) return <p>Loading editor...</p>;
 
@@ -401,7 +469,7 @@ const CreateMemorialPage: React.FC = () => {
 
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm border border-silver">
             <form onSubmit={handleSubmit}>
-              {isEditMode ? renderTabContent() : renderStepContent(false)}
+              {isEditMode ? renderTabContent() : renderStepContent()}
               
                <div className="mt-8 pt-6 border-t border-silver flex justify-between items-center">
                     {!isEditMode && step > 1 ? (

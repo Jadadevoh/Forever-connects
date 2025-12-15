@@ -30,6 +30,13 @@ const getContentType = (filePath) => {
 };
 
 const server = http.createServer((req, res) => {
+  // Health check endpoint for Cloud Run
+  if (req.url === '/healthz' || req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+    return;
+  }
+
   // Normalize path and remove query string
   const safeUrl = req.url.split('?')[0];
   
@@ -52,8 +59,9 @@ const server = http.createServer((req, res) => {
          fs.readFile(path.join(PUBLIC_DIR, 'index.html'), (err, content) => {
             if (err) {
                console.error('Error serving index.html:', err);
-               res.writeHead(500);
-               res.end('Server Error: index.html not found. Did you run npm run build?');
+               // Don't crash, just serve simple error
+               res.writeHead(500, { 'Content-Type': 'text/plain' });
+               res.end('Server Error: index.html not found. Deployment might be in progress.');
             } else {
                res.writeHead(200, { 'Content-Type': 'text/html' });
                res.end(content);
@@ -78,6 +86,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
+// Explicitly bind to 0.0.0.0 to ensure Docker container exposes port correctly
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });

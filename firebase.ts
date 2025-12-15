@@ -1,10 +1,8 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// Your web app's Firebase configuration
-// These values are now loaded from the environment variables defined in vite.config.ts
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -15,8 +13,31 @@ const firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+let initializationError: Error | undefined;
+
+try {
+  // Validate config presence
+  if (!firebaseConfig.apiKey || typeof firebaseConfig.apiKey !== 'string') {
+     throw new Error("Firebase API Key is missing or invalid. Check your environment variables.");
+  }
+
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} catch (error: any) {
+  console.error("Firebase initialization failed:", error);
+  initializationError = error;
+  
+  // Provide dummy objects to prevent immediate import crashes in dependent files.
+  // These will not be used if the App checks initializationError correctly.
+  auth = {} as Auth;
+  db = {} as Firestore;
+  storage = {} as FirebaseStorage;
+}
+
+export { app, auth, db, storage, initializationError };

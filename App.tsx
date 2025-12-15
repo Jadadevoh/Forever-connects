@@ -23,6 +23,8 @@ import { ApiSettingsProvider } from './hooks/useApiSettings';
 import { UsersProvider } from './hooks/useUsers';
 import { GuestMemorialProvider } from './hooks/useGuestMemorial';
 import { SiteSettingsProvider, useSiteSettings } from './hooks/useSiteSettings';
+import { initializationError } from './firebase';
+import FirebaseConfigError from './components/FirebaseConfigError';
 
 const Header: React.FC = () => {
   const { isLoggedIn, logout, isAdmin } = useAuth();
@@ -183,6 +185,12 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // If Firebase initialization failed, show the error component instead of the app
+  // This prevents hooks (like useAuth) from crashing when accessing uninitialized auth
+  if (initializationError) {
+    return <FirebaseConfigError />;
+  }
+
   return (
     <SiteSettingsProvider>
       <ApiSettingsProvider>

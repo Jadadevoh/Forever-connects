@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useMemorials } from '../hooks/useMemorials';
 import { generateTributeSuggestions } from '../services/geminiService';
-import { Photo, Tribute } from '../types';
+import { Photo, Tribute, User } from '../types';
 import PhotoUpload from './PhotoUpload';
 import { useApiSettings } from '../hooks/useApiSettings';
-import { useUsers } from '../hooks/useUsers';
 import { sendNewTributeNotification } from '../services/emailService';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
@@ -24,7 +23,6 @@ const TributeForm: React.FC<TributeFormProps> = ({ memorialId, fullName }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addTribute, getMemorialById } = useMemorials();
   const { apiSettings } = useApiSettings();
-  const { users } = useUsers();
   const { siteSettings } = useSiteSettings();
 
   const handleGenerateSuggestions = async () => {
@@ -53,12 +51,19 @@ const TributeForm: React.FC<TributeFormProps> = ({ memorialId, fullName }) => {
       addTribute(memorialId, tributeData);
 
       const memorial = getMemorialById(memorialId);
-      if (memorial && memorial.userId) {
-          const owner = users.find(u => u.id === memorial.userId);
-          if (owner) {
-              const fullTributeData: Omit<Tribute, 'id' | 'createdAt'> = { ...tributeData, likes: 0 };
-              sendNewTributeNotification(memorial, fullTributeData, owner, apiSettings, siteSettings.siteName);
-          }
+      // We cannot fetch the full User object from the restricted 'users' collection as a guest.
+      // Instead, we rely on the memorial's email settings to determine where to send the notification.
+      if (memorial && memorial.emailSettings.replyToEmail) {
+          const ownerMock: User = {
+            id: memorial.userId || 'owner',
+            name: memorial.emailSettings.senderName || 'Memorial Owner',
+            email: memorial.emailSettings.replyToEmail,
+            plan: 'free', // Dummy value, not used for email
+            role: 'user'
+          };
+          
+          const fullTributeData: Omit<Tribute, 'id' | 'createdAt'> = { ...tributeData, likes: 0 };
+          sendNewTributeNotification(memorial, fullTributeData, ownerMock, apiSettings, siteSettings.siteName);
       }
 
       setAuthor(''); setMessage(''); setRelationship(''); setSentiment('Heartfelt');

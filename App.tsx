@@ -186,8 +186,8 @@ const App: React.FC = () => {
   return (
     <SiteSettingsProvider>
       <ApiSettingsProvider>
-        <UsersProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <UsersProvider>
             <MemorialsProvider>
               <GuestMemorialProvider>
                 <HashRouter>
@@ -195,8 +195,8 @@ const App: React.FC = () => {
                 </HashRouter>
               </GuestMemorialProvider>
             </MemorialsProvider>
-          </AuthProvider>
-        </UsersProvider>
+          </UsersProvider>
+        </AuthProvider>
       </ApiSettingsProvider>
     </SiteSettingsProvider>
   );

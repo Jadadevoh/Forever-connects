@@ -7,13 +7,13 @@ import { getStorage } from 'firebase/storage';
 // For security, these should be loaded from environment variables (e.g., .env file)
 // but can be pasted here directly for testing if you don't have a build step.
 const firebaseConfig = {
-  apiKey: "AIzaSyDcxRsnLFlb_11u9fbgLttoPwCvcbAuahg",
-  authDomain: "memo-80293877-394d6.firebaseapp.com",
-  projectId: "memo-80293877-394d6",
-  storageBucket: "memo-80293877-394d6.firebasestorage.app",
-  messagingSenderId: "855384215042",
-  appId: "1:855384215042:web:fe9a6d7587e4a3744be11b",
-  measurementId: "G-TLMZXCGLJY"
+  apiKey: "AIzaSyAXBaPYsWTi1XBF34TpsP1DzuL7endWNB8",
+  authDomain: "memorial-137e2.firebaseapp.com",
+  projectId: "memorial-137e2",
+  storageBucket: "memorial-137e2.firebasestorage.app",
+  messagingSenderId: "399198634514",
+  appId: "1:399198634514:web:3f88a5e9b9f44399368ecb",
+  measurementId: "G-QJPJYTHGYQ"
 };
 
 // Initialize Firebase

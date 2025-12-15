@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User } from '../types';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from './useAuth';
 
 interface UsersContextType {
   users: User[];
@@ -13,8 +14,15 @@ const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
+    // Only admins are allowed to read the full users collection
+    if (!isAdmin) {
+        setUsers([]);
+        return;
+    }
+
     const usersCollection = collection(db, 'users');
     const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
       const fetchedUsers = snapshot.docs.map(doc => doc.data() as User);
@@ -24,7 +32,7 @@ export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
 
     return unsubscribe;
-  }, []);
+  }, [isAdmin]);
 
   const updateUser = async (userId: string, updatedData: Partial<User>) => {
     try {

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Memorial, Donation } from '../types';
+import { Memorial, Donation, User } from '../types';
 import { useMemorials } from '../hooks/useMemorials';
-import { useUsers } from '../hooks/useUsers';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendDonationReceipt, sendDonationNotification } from '../services/emailService';
 import { useSiteSettings } from '../hooks/useSiteSettings';
@@ -12,7 +11,6 @@ interface DonationModuleProps {
 
 const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
     const { addDonation } = useMemorials();
-    const { users } = useUsers();
     const { apiSettings } = useApiSettings();
     const { siteSettings } = useSiteSettings();
 
@@ -66,11 +64,18 @@ const DonationModule: React.FC<DonationModuleProps> = ({ memorial }) => {
         addDonation(memorial.id, donationData);
 
         // --- Email Notifications ---
-        const owner = users.find(u => u.id === memorial.userId);
         const fullDonationData: Donation = { ...donationData, id: '', payoutStatus: 'pending' }; // for receipt
         sendDonationReceipt(email, fullDonationData, memorial, apiSettings, siteSettings.siteName);
-        if (owner) {
-            sendDonationNotification(fullDonationData, memorial, owner, apiSettings, siteSettings.siteName);
+        
+        if (memorial.emailSettings.replyToEmail) {
+             const ownerMock: User = {
+                id: memorial.userId || 'owner',
+                name: memorial.emailSettings.senderName || 'Memorial Owner',
+                email: memorial.emailSettings.replyToEmail,
+                plan: 'free',
+                role: 'user'
+             };
+            sendDonationNotification(fullDonationData, memorial, ownerMock, apiSettings, siteSettings.siteName);
         }
         // --- End Notifications ---
 

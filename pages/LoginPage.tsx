@@ -37,10 +37,10 @@ const LoginPage: React.FC = () => {
     }
   }
 
-  const handleLogin = (loginFn: () => User) => {
+  const handleLogin = async (loginFn: () => Promise<User>) => {
     setError('');
     try {
-      const loggedInUser = loginFn();
+      const loggedInUser = await loginFn();
       handlePostLogin(loggedInUser);
     } catch (err: any) {
       setError(err.message || 'Failed to log in. Please check your credentials.');
@@ -111,3 +111,4 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+    

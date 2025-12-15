@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface UsersContextType {
   users: User[];
@@ -9,23 +11,36 @@ interface UsersContextType {
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
-// In a non-Firebase version, this context is less dynamic and might not be strictly necessary,
-// but we keep it for consistency and to allow the admin panel to function as designed.
-const initialUsers: User[] = [
-    { id: 'admin_user', name: 'Admin User', email: 'admin@example.com', plan: 'eternal', role: 'admin' },
-    { id: 'demo_user', name: 'Demo User', email: 'user@example.com', plan: 'free', role: 'user' }
-];
-
-
 export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const updateUser = (userId: string, updatedData: Partial<User>) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatedData } : u));
+  useEffect(() => {
+    const usersCollection = collection(db, 'users');
+    const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
+      const fetchedUsers = snapshot.docs.map(doc => doc.data() as User);
+      setUsers(fetchedUsers);
+    }, (error) => {
+      console.error("Error fetching users:", error);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const updateUser = async (userId: string, updatedData: Partial<User>) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, updatedData);
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
   };
 
-  const deleteUser = (userId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
+  const deleteUser = async (userId: string) => {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
   };
 
   return (

@@ -43,10 +43,10 @@ const SignUpPage: React.FC = () => {
     }
   }
 
-  const handleSignup = (signupFn: () => any) => {
+  const handleSignup = async (signupFn: () => Promise<any>) => {
     setError('');
     try {
-      const newUser = signupFn();
+      const newUser = await signupFn();
       
       sendWelcomeEmail(newUser, apiSettings, siteSettings.siteName);
       handlePostLogin(newUser);
@@ -109,7 +109,7 @@ const SignUpPage: React.FC = () => {
       </div>
 
       <p className="mt-6 text-center text-sm text-soft-gray">
-        Already have an account?{' '}
+        Don't have an account?{' '}
         <Link to="/login" className="font-medium text-dusty-blue hover:text-deep-navy">
           Log in
         </Link>
@@ -119,3 +119,4 @@ const SignUpPage: React.FC = () => {
 };
 
 export default SignUpPage;
+    

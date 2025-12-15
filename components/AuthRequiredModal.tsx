@@ -21,19 +21,22 @@ const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose, 
       >
         <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-dusty-blue/10">
           <svg className="h-6 w-6 text-dusty-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-2xl font-serif font-bold text-deep-navy mt-4">Save Your Memorial</h3>
+        <h3 className="text-2xl font-serif font-bold text-deep-navy mt-4">Save Your Beautiful Memorial</h3>
         <p className="mt-2 text-deep-navy/80">
-          Please sign up or log in to publish your memorial. Your progress will be saved.
+          You're almost there! To securely save this memorial and publish it for others to see, please create a free account.
+        </p>
+        <p className="mt-1 text-sm text-soft-gray">
+          Don't worry, all your photos and text have been saved.
         </p>
         <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
           <button
             onClick={() => onAuthRedirect('/signup')}
             className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-dusty-blue text-base font-medium text-white hover:opacity-90 sm:w-auto sm:text-sm"
           >
-            Sign Up
+            Create Free Account
           </button>
           <button
             type="button"

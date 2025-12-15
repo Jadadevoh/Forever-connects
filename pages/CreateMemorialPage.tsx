@@ -30,6 +30,12 @@ const relationshipOptions = [
 ];
 const DRAFT_STORAGE_KEY = 'memorial_draft';
 
+const DEFAULT_PROFILE_IMAGE: Photo = {
+    id: 'default_placeholder',
+    url: 'https://placehold.co/400x400/e2e8f0/1e293b?text=In+Loving+Memory',
+    caption: 'Default Profile Image'
+};
+
 
 const ThemePreviewCard: React.FC<{theme: Theme, isSelected: boolean, isRecommended: boolean, onClick: () => void}> = ({ theme, isSelected, isRecommended, onClick }) => (
     <div onClick={onClick} className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${isSelected ? 'border-dusty-blue bg-pale-sky shadow-md' : 'border-silver bg-white hover:border-soft-gray'}`}>
@@ -261,20 +267,15 @@ const CreateMemorialPage: React.FC = () => {
     e.preventDefault();
 
     // If creating a new memorial and not logged in, prompt to create account FIRST.
-    // This allows saving the draft without strict validation (like profile image).
+    // We allow saving the draft without strict validation (like profile image) here.
     if (!isEditMode && !isLoggedIn) {
         setIsAuthModalOpen(true);
         return;
     }
 
-    // If we reach here, we are either editing OR we are logged in and trying to publish/create.
-    // Enforce validation rules for publishing.
-    if (!formData.profileImage) { 
-        alert("A profile image is required to publish the memorial. Please upload one in the Basic Information section."); 
-        isEditMode ? setCurrentTab('info') : setStep(1); 
-        return; 
-    }
-    
+    // Determine the profile image to use (user uploaded OR default)
+    const profileImageToUse = formData.profileImage || DEFAULT_PROFILE_IMAGE;
+
     if (!selectedTheme) { 
         alert("Please select a theme for the memorial."); 
         isEditMode ? setCurrentTab('theme') : setStep(5); 
@@ -293,7 +294,7 @@ const CreateMemorialPage: React.FC = () => {
         const { relationship, ...dataToSave } = formData;
         const updatedData: Partial<Memorial> = {
             ...dataToSave, gender: dataToSave.gender || undefined, middleName: dataToSave.middleName || undefined,
-            state: dataToSave.state || undefined, profileImage: formData.profileImage, theme: selectedTheme,
+            state: dataToSave.state || undefined, profileImage: profileImageToUse, theme: selectedTheme,
             status: isDraft ? 'active' : memorialToEdit?.status,
         };
         updateMemorial(editId, updatedData);
@@ -306,7 +307,7 @@ const CreateMemorialPage: React.FC = () => {
         const memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
             ...dataToSave, gender: dataToSave.gender || undefined, userId: currentUser?.id,
             middleName: dataToSave.middleName || undefined, state: dataToSave.state || undefined,
-            profileImage: formData.profileImage, theme: selectedTheme, status: 'active', donations: [],
+            profileImage: profileImageToUse, theme: selectedTheme, status: 'active', donations: [],
         };
         const newMemorial = addMemorial(memorialData);
         window.localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -319,12 +320,11 @@ const CreateMemorialPage: React.FC = () => {
     // Save draft data even if incomplete so user can sign up/login and return
     const { relationship, ...dataToSave } = formData;
     
-    // Merge the selectedTheme into the saved data
+    // Merge the selectedTheme into the saved data, use the default image if none selected for the draft
     const draftData = {
         ...dataToSave,
-        profileImage: formData.profileImage,
+        profileImage: formData.profileImage || DEFAULT_PROFILE_IMAGE,
         theme: selectedTheme,
-        // Add defaults for required fields if they are missing, though the type is now loose
         donations: [],
         tributes: [],
         status: 'draft',
@@ -364,9 +364,9 @@ const CreateMemorialPage: React.FC = () => {
                      </div>
                    </div>
                    <div>
-                       <label htmlFor="profileImage" className={labelStyles}>Profile Image</label>
+                       <label htmlFor="profileImage" className={labelStyles}>Profile Image (Optional)</label>
+                       <div className="mb-2 text-xs text-soft-gray">You can add this later. If left blank, a default image will be used.</div>
                        <PhotoUpload onPhotosUpload={handleProfileImageUpload} multiple={false} />
-                       {/* Removed the error text here to allow creating a draft without an image */}
                    </div>
               </div>
     );

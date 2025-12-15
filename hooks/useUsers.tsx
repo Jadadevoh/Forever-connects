@@ -28,7 +28,13 @@ export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const fetchedUsers = snapshot.docs.map(doc => doc.data() as User);
       setUsers(fetchedUsers);
     }, (error) => {
-      console.error("Error fetching users:", error);
+      // Log only the message to avoid "Converting circular structure to JSON" errors
+      // and suppress "Missing or insufficient permissions" noise if not admin
+      if (error.code === 'permission-denied') {
+          console.warn("Access to users collection denied. Ensure you have admin privileges.");
+      } else {
+          console.error("Error fetching users:", error.message);
+      }
     });
 
     return unsubscribe;
@@ -38,16 +44,16 @@ export const UsersProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, updatedData);
-    } catch (error) {
-      console.error("Error updating user:", error);
+    } catch (error: any) {
+      console.error("Error updating user:", error.message);
     }
   };
 
   const deleteUser = async (userId: string) => {
     try {
       await deleteDoc(doc(db, 'users', userId));
-    } catch (error) {
-      console.error("Error deleting user:", error);
+    } catch (error: any) {
+      console.error("Error deleting user:", error.message);
     }
   };
 

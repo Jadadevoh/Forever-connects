@@ -54,8 +54,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             await setDoc(userDocRef, newUser);
             setCurrentUser(newUser);
           }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
+        } catch (error: any) {
+          console.error("Error fetching user profile:", error.message);
           setCurrentUser(null);
         }
       } else {

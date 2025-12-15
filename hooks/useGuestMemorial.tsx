@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Memorial } from '../types';
 
-// FIX: Excluded 'slug' from the type as it is generated upon final memorial creation, not during guest progress saving.
-type GuestMemorialData = Omit<Memorial, 'id' | 'userId' | 'slug'> | null;
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+// Use 'any' to allow storing incomplete draft data (MemorialCreationData + theme)
+// This gives flexibility when saving progress before the memorial is fully valid.
+type GuestMemorialData = any;
 
 interface GuestMemorialContextType {
   guestMemorialData: GuestMemorialData;
-  saveGuestMemorial: (data: Omit<Memorial, 'id' | 'userId' | 'slug'>) => void;
+  saveGuestMemorial: (data: any) => void;
   clearGuestMemorial: () => void;
 }
 
@@ -25,7 +26,7 @@ export const GuestMemorialProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   });
 
-  const saveGuestMemorial = (data: Omit<Memorial, 'id' | 'userId' | 'slug'>) => {
+  const saveGuestMemorial = (data: any) => {
     try {
         setGuestMemorialData(data);
         window.sessionStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));

@@ -16,22 +16,32 @@ const LoginPage: React.FC = () => {
   const { guestMemorialData, clearGuestMemorial } = useGuestMemorial();
   const { addMemorial } = useMemorials();
 
+  const handlePostLogin = (user: User) => {
+    if (location.state?.fromCreate && guestMemorialData) {
+       // Check completeness
+       if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
+            const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
+              ...guestMemorialData,
+              userId: user.id,
+              status: 'draft',
+            };
+            addMemorial(memorialToCreate);
+            clearGuestMemorial();
+            navigate('/dashboard');
+       } else {
+            // Incomplete draft, go back to editor
+            navigate('/create');
+       }
+    } else {
+      navigate('/dashboard');
+    }
+  }
+
   const handleLogin = (loginFn: () => User) => {
     setError('');
     try {
       const loggedInUser = loginFn();
-      if (location.state?.fromCreate && guestMemorialData) {
-        const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
-          ...guestMemorialData,
-          userId: loggedInUser.id,
-          status: 'draft',
-        };
-        addMemorial(memorialToCreate);
-        clearGuestMemorial();
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      handlePostLogin(loggedInUser);
     } catch (err: any) {
       setError(err.message || 'Failed to log in. Please check your credentials.');
     }

@@ -19,6 +19,15 @@ const labelStyles = "block text-sm font-medium text-deep-navy/90";
 const countries = ["United States", "Canada", "Mexico", "United Kingdom", "Australia", "Germany", "France", "Japan", "Brazil", "India", "Other"];
 const causeOfDeathSuggestions = ["Natural Causes", "Cancer", "Heart Disease", "Stroke", "Accident", "COVID-19", "Alzheimer's Disease", "Diabetes"];
 const donationPurposes = ["General Support for the Family", "Funeral Expenses", "Charitable Cause in their Name", "Medical Bills", "Education Fund for Children", "Other"];
+const relationshipOptions = [
+  "Spouse", "Partner", "Husband", "Wife",
+  "Son", "Daughter", "Child",
+  "Father", "Mother", "Parent",
+  "Brother", "Sister", "Sibling",
+  "Grandson", "Granddaughter", "Grandchild",
+  "Grandfather", "Grandmother", "Grandparent",
+  "Friend", "Family Member", "Colleague", "Other"
+];
 const DRAFT_STORAGE_KEY = 'memorial_draft';
 
 
@@ -49,7 +58,7 @@ const CreateMemorialPage: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(location.state?.defaultTab || 'info');
   
   const { currentUser, isLoggedIn } = useAuth();
-  const { saveGuestMemorial } = useGuestMemorial();
+  const { saveGuestMemorial, guestMemorialData, clearGuestMemorial } = useGuestMemorial();
   const [formData, setFormData] = useState<MemorialCreationData>({
     firstName: '', middleName: '', lastName: '', birthDate: '', deathDate: '', gender: '', city: '',
     state: '', country: '', causeOfDeath: [], isCauseOfDeathPrivate: false, relationship: '',
@@ -110,18 +119,24 @@ const CreateMemorialPage: React.FC = () => {
             window.localStorage.removeItem(DRAFT_STORAGE_KEY);
         }
     } else {
-        try {
-            const savedDraft = window.localStorage.getItem(DRAFT_STORAGE_KEY);
-            if (savedDraft) {
-                const parsedDraft = JSON.parse(savedDraft);
-                if (parsedDraft && typeof parsedDraft === 'object') setFormData(parsedDraft);
-            } else {
-                 setFormData(prev => ({ ...prev, emailSettings: { ...prev.emailSettings, replyToEmail: currentUser?.email || '' }}));
-            }
-        } catch (error) { console.error("Error reading draft from localStorage", error); }
+        // Prioritize data passed via GuestMemorialContext (e.g. from Signup redirect)
+        if (guestMemorialData && Object.keys(guestMemorialData).length > 0) {
+            setFormData(prev => ({ ...prev, ...guestMemorialData }));
+            if (guestMemorialData.theme) setSelectedTheme(guestMemorialData.theme);
+        } else {
+            try {
+                const savedDraft = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+                if (savedDraft) {
+                    const parsedDraft = JSON.parse(savedDraft);
+                    if (parsedDraft && typeof parsedDraft === 'object') setFormData(parsedDraft);
+                } else {
+                    setFormData(prev => ({ ...prev, emailSettings: { ...prev.emailSettings, replyToEmail: currentUser?.email || '' }}));
+                }
+            } catch (error) { console.error("Error reading draft from localStorage", error); }
+        }
     }
     setIsDataLoaded(true);
-  }, [isEditMode, editId, memorialToEdit, navigate, currentUser]);
+  }, [isEditMode, editId, memorialToEdit, navigate, currentUser, guestMemorialData]);
 
   useEffect(() => {
     if (isEditMode || !isDataLoaded) return;
@@ -244,8 +259,35 @@ const CreateMemorialPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.profileImage) { alert("Please upload a profile image."); isEditMode ? setCurrentTab('info') : setStep(1); return; }
-    if (!selectedTheme) { alert("Please select a theme for the memorial."); isEditMode ? setCurrentTab('theme') : setStep(5); return; }
+
+    // If creating a new memorial and not logged in, prompt to create account FIRST.
+    // This allows saving the draft without strict validation (like profile image).
+    if (!isEditMode && !isLoggedIn) {
+        setIsAuthModalOpen(true);
+        return;
+    }
+
+    // If we reach here, we are either editing OR we are logged in and trying to publish/create.
+    // Enforce validation rules for publishing.
+    if (!formData.profileImage) { 
+        alert("A profile image is required to publish the memorial. Please upload one in the Basic Information section."); 
+        isEditMode ? setCurrentTab('info') : setStep(1); 
+        return; 
+    }
+    
+    if (!selectedTheme) { 
+        alert("Please select a theme for the memorial."); 
+        isEditMode ? setCurrentTab('theme') : setStep(5); 
+        return; 
+    }
+
+    // Warn if gallery is empty but don't block
+    if (formData.gallery.length === 0) {
+        if (!window.confirm("You haven't uploaded any additional photos or media to the gallery. A memorial is richer with photos and videos. Do you want to publish anyway?")) {
+            isEditMode ? setCurrentTab('gallery') : setStep(4);
+            return;
+        }
+    }
 
     if (isEditMode && editId) {
         const { relationship, ...dataToSave } = formData;
@@ -256,9 +298,10 @@ const CreateMemorialPage: React.FC = () => {
         };
         updateMemorial(editId, updatedData);
         window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+        clearGuestMemorial();
         navigate(`/memorial/${memorialToEdit?.slug}`);
     } else {
-        if (!isLoggedIn) { setIsAuthModalOpen(true); return; }
+        // Logged in user creating new active memorial
         const { relationship, ...dataToSave } = formData;
         const memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
             ...dataToSave, gender: dataToSave.gender || undefined, userId: currentUser?.id,
@@ -267,25 +310,27 @@ const CreateMemorialPage: React.FC = () => {
         };
         const newMemorial = addMemorial(memorialData);
         window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+        clearGuestMemorial();
         navigate(`/memorial/${newMemorial.slug}`);
     }
   };
 
   const handleAuthRedirect = (path: '/login' | '/signup') => {
-    if (!formData.profileImage) { alert("Please upload a profile image before continuing."); return; }
-    if (!selectedTheme) { alert("Please select a theme for the memorial before continuing."); return; }
+    // Save draft data even if incomplete so user can sign up/login and return
     const { relationship, ...dataToSave } = formData;
     
-    // FIX: Included 'tributes: []' and adjusted type definition to match what useGuestMemorial expects.
-    const finalData: Omit<Memorial, 'id' | 'userId' | 'slug'> = {
+    // Merge the selectedTheme into the saved data
+    const draftData = {
         ...dataToSave,
         profileImage: formData.profileImage,
         theme: selectedTheme,
-        donations: [], // Start with empty donations
-        tributes: [], // Start with empty tributes
+        // Add defaults for required fields if they are missing, though the type is now loose
+        donations: [],
+        tributes: [],
         status: 'draft',
     };
-    saveGuestMemorial(finalData);
+
+    saveGuestMemorial(draftData);
     navigate(path, { state: { fromCreate: true } });
   };
   
@@ -318,7 +363,11 @@ const CreateMemorialPage: React.FC = () => {
                         </select>
                      </div>
                    </div>
-                   <div><label htmlFor="profileImage" className={labelStyles}>Profile Image</label><PhotoUpload onPhotosUpload={handleProfileImageUpload} multiple={false} />{!formData.profileImage && <p className="text-sm text-red-500 mt-1">Profile image is required.</p>}</div>
+                   <div>
+                       <label htmlFor="profileImage" className={labelStyles}>Profile Image</label>
+                       <PhotoUpload onPhotosUpload={handleProfileImageUpload} multiple={false} />
+                       {/* Removed the error text here to allow creating a draft without an image */}
+                   </div>
               </div>
     );
 
@@ -349,7 +398,18 @@ const CreateMemorialPage: React.FC = () => {
                 <h4 className="font-semibold text-deep-navy">AI Biography Assistant</h4>
                 <p className="text-sm text-soft-gray mb-2">Struggling for words? Provide a few details and let our AI help you write a beautiful tribute.</p>
                 <div className="space-y-3">
-                    <div><label htmlFor="relationship" className={labelStyles}>Your Relationship to Deceased</label><input type="text" name="relationship" value={formData.relationship} onChange={handleInputChange} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Daughter, Friend, Sibling" /></div>
+                    <div>
+                        <label htmlFor="relationship" className={labelStyles}>Your Relationship to Deceased</label>
+                        <select 
+                            name="relationship" 
+                            value={formData.relationship} 
+                            onChange={handleInputChange} 
+                            className={inputStyles.replace('bg-pale-sky', 'bg-white')}
+                        >
+                            <option value="">Select Relationship</option>
+                            {relationshipOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    </div>
                     <div><label htmlFor="personalityTraits" className={labelStyles}>Personality Traits</label><textarea id="personalityTraits" value={personalityTraits} onChange={(e) => setPersonalityTraits(e.target.value)} rows={2} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="e.g. Kind, adventurous, stubborn but loving"></textarea></div>
                     <div><label htmlFor="keyMemories" className={labelStyles}>Key Memories & Life Highlights</label><textarea id="keyMemories" value={keyMemories} onChange={(e) => setKeyMemories(e.target.value)} rows={3} className={inputStyles.replace('bg-pale-sky', 'bg-white')} placeholder="Mention hobbies, career, favorite sayings, or specific memories..."></textarea></div>
                     <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="w-full sm:w-auto px-4 py-2 bg-dusty-blue text-white font-semibold rounded-md text-sm hover:opacity-90 disabled:bg-soft-gray">{isGeneratingBio ? 'Generating...' : 'Generate Biography'}</button>
@@ -460,6 +520,19 @@ const CreateMemorialPage: React.FC = () => {
           <UpgradeModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} reason={upgradeReason} />
           <AuthRequiredModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onAuthRedirect={handleAuthRedirect} />
           
+          <div className="flex justify-between items-center mb-2">
+            <div></div> {/* Spacer */}
+             {!isLoggedIn && !isEditMode && (
+                <button 
+                    type="button" 
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="text-dusty-blue hover:text-deep-navy font-medium text-sm"
+                >
+                    Save Progress & Create Account
+                </button>
+            )}
+          </div>
+
           <h1 className="text-3xl sm:text-4xl font-serif font-bold text-deep-navy text-center mb-2">
             {isEditMode ? isDraft ? 'Complete & Publish Memorial' : 'Edit Memorial' : 'Create a Memorial'}
           </h1>

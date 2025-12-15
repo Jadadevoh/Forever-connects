@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -21,25 +22,35 @@ const SignUpPage: React.FC = () => {
   const { apiSettings } = useApiSettings();
   const { siteSettings } = useSiteSettings();
 
+  const handlePostLogin = (user: any) => {
+    if (location.state?.fromCreate && guestMemorialData) {
+        // Check if the memorial is complete enough to be published (e.g. has a profile image)
+        if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
+            const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
+              ...guestMemorialData,
+              userId: user.id,
+              status: 'draft',
+            };
+            addMemorial(memorialToCreate);
+            clearGuestMemorial();
+            navigate('/dashboard');
+        } else {
+            // Data is incomplete (e.g. user just clicked "Save Progress"), so redirect back to editor to finish
+            navigate('/create');
+        }
+    } else {
+      navigate('/dashboard');
+    }
+  }
+
   const handleSignup = (signupFn: () => any) => {
     setError('');
     try {
       const newUser = signupFn();
       
       sendWelcomeEmail(newUser, apiSettings, siteSettings.siteName);
+      handlePostLogin(newUser);
 
-      if (location.state?.fromCreate && guestMemorialData) {
-        const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
-          ...guestMemorialData,
-          userId: newUser.id,
-          status: 'draft',
-        };
-        addMemorial(memorialToCreate);
-        clearGuestMemorial();
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up. Please try again.');
     }

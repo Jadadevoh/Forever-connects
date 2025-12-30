@@ -1,83 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Forever Connected Memorials</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'pale-sky': 'var(--bg-color, #EDF2F7)',
-              'dusty-blue': 'var(--primary-color, #7B9ACD)',
-              'deep-navy': 'var(--text-color, #1D2D50)',
-              'soft-gray': 'var(--accent-color, #AEB4C2)',
-              'silver': 'var(--border-color, #DDE2EB)',
-            },
-            fontFamily: {
-              'sans': ['Inter', 'sans-serif'],
-              'serif': ['Lora', 'serif'],
-            }
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remembered Flame Memorials</title>
+  <meta name="description"
+    content="Create beautiful, lasting online memorials for your loved ones. Share stories, photos, and tributes with friends and family." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'pale-sky': 'var(--bg-color, #EDF2F7)',
+            'dusty-blue': 'var(--primary-color, #7B9ACD)',
+            'deep-navy': 'var(--text-color, #1D2D50)',
+            'soft-gray': 'var(--accent-color, #AEB4C2)',
+            'silver': 'var(--border-color, #DDE2EB)',
+          },
+          fontFamily: {
+            'sans': ['Inter', 'sans-serif'],
+            'serif': ['Lora', 'serif'],
           }
         }
       }
-    </script>
-    <style>
-      body {
-        --bg-color: #EDF2F7;
-        --primary-color: #7B9ACD;
-        --text-color: #1D2D50;
-        --accent-color: #AEB4C2;
-        --border-color: #DDE2EB;
-      }
-      .theme-classic-rose {
-        --bg-color: #FFF5F5;
-        --text-color: #5E3737;
-        --primary-color: #D68C8C;
-        --accent-color: #E3B3B3;
-        --border-color: #F3D9D9;
-      }
-      .theme-modern-blue {
-        --bg-color: #F0F4F8;
-        --text-color: #1F2937;
-        --primary-color: #3B82F6;
-        --accent-color: #93C5FD;
-        --border-color: #D1E5FE;
-      }
-      .theme-elegant-gold {
-        --bg-color: #FCFBF8;
-        --text-color: #4A443A;
-        --primary-color: #D4AF37;
-        --accent-color: #E6C769;
-        --border-color: #F5EAD3;
-      }
-      .theme-peaceful-green {
-        --bg-color: #F1F5F2;
-        --text-color: #386641;
-        --primary-color: #6A994E;
-        --accent-color: #A7C957;
-        --border-color: #E2EBDD;
-      }
-      .ql-editor {
-        min-height: 200px;
-      }
-      .prose-styles h1 { font-size: 2em; font-weight: bold; margin-bottom: 0.5em; }
-      .prose-styles h2 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
-      .prose-styles h3 { font-size: 1.17em; font-weight: bold; margin-bottom: 0.5em; }
-      .prose-styles p { margin-bottom: 1em; line-height: 1.6; }
-      .prose-styles ul, .prose-styles ol { margin-left: 1.5em; margin-bottom: 1em; }
-      .prose-styles li { margin-bottom: 0.25em; }
-      .prose-styles blockquote { border-left: 4px solid #ccc; margin-left: 0; padding-left: 1em; color: #555; font-style: italic; }
-      .prose-styles a { color: var(--primary-color); text-decoration: underline; }
+    }
+  </script>
+  <style>
+    body {
+      --bg-color: #EDF2F7;
+      --primary-color: #7B9ACD;
+      --text-color: #1D2D50;
+      --accent-color: #AEB4C2;
+      --border-color: #DDE2EB;
+    }
 
-    </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    .theme-classic-rose {
+      --bg-color: #FFF5F5;
+      --text-color: #5E3737;
+      --primary-color: #D68C8C;
+      --accent-color: #E3B3B3;
+      --border-color: #F3D9D9;
+    }
+
+    .theme-modern-blue {
+      --bg-color: #F0F4F8;
+      --text-color: #1F2937;
+      --primary-color: #3B82F6;
+      --accent-color: #93C5FD;
+      --border-color: #D1E5FE;
+    }
+
+    .theme-elegant-gold {
+      --bg-color: #FCFBF8;
+      --text-color: #4A443A;
+      --primary-color: #D4AF37;
+      --accent-color: #E6C769;
+      --border-color: #F5EAD3;
+    }
+
+    .theme-peaceful-green {
+      --bg-color: #F1F5F2;
+      --text-color: #386641;
+      --primary-color: #6A994E;
+      --accent-color: #A7C957;
+      --border-color: #E2EBDD;
+    }
+
+    .ql-editor {
+      min-height: 200px;
+    }
+
+    .prose-styles h1 {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+
+    .prose-styles h2 {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+
+    .prose-styles h3 {
+      font-size: 1.17em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+
+    .prose-styles p {
+      margin-bottom: 1em;
+      line-height: 1.6;
+    }
+
+    .prose-styles ul,
+    .prose-styles ol {
+      margin-left: 1.5em;
+      margin-bottom: 1em;
+    }
+
+    .prose-styles li {
+      margin-bottom: 0.25em;
+    }
+
+    .prose-styles blockquote {
+      border-left: 4px solid #ccc;
+      margin-left: 0;
+      padding-left: 1em;
+      color: #555;
+      font-style: italic;
+    }
+
+    .prose-styles a {
+      color: var(--primary-color);
+      text-decoration: underline;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
@@ -102,8 +149,10 @@
 }
 </script>
 </head>
-  <body class="bg-pale-sky">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body class="bg-pale-sky">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

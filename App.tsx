@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CreateMemorialPage from './pages/CreateMemorialPage';
 import MemorialPage from './pages/MemorialPage';
@@ -11,6 +11,9 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import CheckoutPage from './pages/CheckoutPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
@@ -38,7 +41,7 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(false);
     navigate('/');
   };
-  
+
   const showCreateButton = location.pathname !== '/dashboard' && location.pathname !== '/create' && !location.pathname.startsWith('/edit/');
 
   // Close mobile menu on route change
@@ -63,27 +66,54 @@ const Header: React.FC = () => {
             {siteSettings.siteName}
           </span>
         </Link>
-        
+
         {/* Center: Nav Links (Desktop) */}
         <div className="hidden lg:flex items-center space-x-4 sm:space-x-6 flex-grow justify-center">
-          <Link to="/" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base">Home</Link>
-          <Link to="/about" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base">About</Link>
-          <Link to="/contact" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base">Contact</Link>
-          <Link to="/pricing" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base">Pricing</Link>
+          {['/', '/about', '/contact', '/pricing'].map((path) => (
+            <Link
+              key={path}
+              to={path}
+              className={`${location.pathname === path ? 'text-dusty-blue font-bold' : 'text-deep-navy font-medium'} hover:text-dusty-blue transition-colors duration-300 text-sm sm:text-base capitalize`}
+            >
+              {path === '/' ? 'Home' : path.substring(1)}
+            </Link>
+          ))}
         </div>
 
         {/* Right: Auth & CTA (Desktop) */}
         <div className="hidden lg:flex items-center space-x-2 sm:space-x-4">
           {isLoggedIn ? (
             <>
-              {isAdmin && <Link to="/admin" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg">Admin</Link>}
-              <Link to="/dashboard" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg">Dashboard</Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className={`${location.pathname === '/admin' ? 'text-dusty-blue font-bold' : 'text-deep-navy font-medium'} hover:text-dusty-blue transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg`}
+                >
+                  Admin
+                </Link>
+              )}
+              <Link
+                to="/dashboard"
+                className={`${location.pathname === '/dashboard' ? 'text-dusty-blue font-bold' : 'text-deep-navy font-medium'} hover:text-dusty-blue transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg`}
+              >
+                Dashboard
+              </Link>
               <button onClick={handleLogout} className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg">Log Out</button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg">Log In</Link>
-              <Link to="/signup" className="text-deep-navy hover:text-dusty-blue font-medium transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg">Sign Up</Link>
+              <Link
+                to="/login"
+                className={`${location.pathname === '/login' ? 'text-dusty-blue font-bold' : 'text-deep-navy font-medium'} hover:text-dusty-blue transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg`}
+              >
+                Log In
+              </Link>
+              <Link
+                to="/signup"
+                className={`${location.pathname === '/signup' ? 'text-dusty-blue font-bold' : 'text-deep-navy font-medium'} hover:text-dusty-blue transition-colors duration-300 text-sm sm:text-base px-2 py-2 rounded-lg`}
+              >
+                Sign Up
+              </Link>
             </>
           )}
           {showCreateButton && (
@@ -103,7 +133,7 @@ const Header: React.FC = () => {
       <div className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black bg-opacity-25" onClick={() => setIsMobileMenuOpen(false)}></div>
-        
+
         {/* Menu */}
         <div className={`absolute top-0 right-0 h-full w-64 bg-white shadow-lg p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-deep-navy p-2">
@@ -114,7 +144,7 @@ const Header: React.FC = () => {
             <Link to="/about" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">About</Link>
             <Link to="/contact" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Contact</Link>
             <Link to="/pricing" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Pricing</Link>
-            
+
             <div className="border-t border-silver my-4 pt-4 space-y-2">
               {isLoggedIn ? (
                 <>
@@ -131,7 +161,7 @@ const Header: React.FC = () => {
             </div>
 
             {showCreateButton && (
-                <Link to="/create" className="mt-6 block text-center w-full bg-dusty-blue hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Create a Memorial</Link>
+              <Link to="/create" className="mt-6 block text-center w-full bg-dusty-blue hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Create a Memorial</Link>
             )}
           </nav>
         </div>
@@ -142,46 +172,49 @@ const Header: React.FC = () => {
 
 
 const AppContent: React.FC = () => {
-    const location = useLocation();
-    const { isAdmin, isLoggedIn, loading } = useAuth();
-    const isAboutPage = location.pathname === '/about';
-    const isHomePage = location.pathname === '/';
-    const mainClass = isAboutPage || isHomePage ? "flex-grow" : "flex-grow container mx-auto p-4 sm:p-6 lg:p-8";
+  const location = useLocation();
+  const { isAdmin, isLoggedIn, loading } = useAuth();
+  const isAboutPage = location.pathname === '/about';
+  const isHomePage = location.pathname === '/';
+  const mainClass = isAboutPage || isHomePage ? "flex-grow" : "flex-grow container mx-auto p-4 sm:p-6 lg:p-8";
 
-    return (
-        <div className="flex flex-col min-h-screen font-sans text-deep-navy">
-            <Header />
-            <main className={mainClass}>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/create" element={<CreateMemorialPage />} />
-                    <Route path="/edit/:id" element={<CreateMemorialPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignUpPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/admin" element={!loading && isLoggedIn && isAdmin ? <AdminDashboardPage /> : <Navigate to="/" />} />
-                    <Route path="/memorial/:slug" element={<MemorialPage />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                    <Route path="/donation-terms" element={<DonationTermsPage />} />
-                    <Route path="/refund-policy" element={<RefundPolicyPage />} />
-                    <Route path="/stripe-agreement" element={<StripeAgreementPage />} />
-                </Routes>
-            </main>
-            <footer className="bg-transparent mt-8 py-4 border-t border-silver">
-                <nav className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center flex-wrap gap-x-6 gap-y-2">
-                    <Link to="/privacy-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Privacy Policy</Link>
-                    <Link to="/donation-terms" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Donation Terms</Link>
-                    <Link to="/refund-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Refund Policy</Link>
-                    <Link to="/stripe-agreement" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Stripe Agreement</Link>
-                </nav>
-            </footer>
-        </div>
-    );
+  return (
+    <div className="flex flex-col min-h-screen font-sans text-deep-navy">
+      <Header />
+      <main className={mainClass}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/create" element={<CreateMemorialPage />} />
+          <Route path="/edit/:id" element={<CreateMemorialPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/checkout/:plan" element={<CheckoutPage />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+          <Route path="/admin" element={!loading && isLoggedIn && isAdmin ? <AdminDashboardPage /> : <Navigate to="/" />} />
+          <Route path="/memorial/:slug" element={<MemorialPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/donation-terms" element={<DonationTermsPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/stripe-agreement" element={<StripeAgreementPage />} />
+        </Routes>
+      </main>
+      <footer className="bg-transparent mt-8 py-4 border-t border-silver">
+        <nav className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-center items-center flex-wrap gap-x-6 gap-y-2">
+          <Link to="/privacy-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Privacy Policy</Link>
+          <Link to="/donation-terms" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Donation Terms</Link>
+          <Link to="/refund-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Refund Policy</Link>
+          <Link to="/stripe-agreement" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Stripe Agreement</Link>
+        </nav>
+      </footer>
+    </div>
+  );
 };
 
 const App: React.FC = () => {
@@ -198,9 +231,9 @@ const App: React.FC = () => {
           <UsersProvider>
             <MemorialsProvider>
               <GuestMemorialProvider>
-                <HashRouter>
+                <BrowserRouter>
                   <AppContent />
-                </HashRouter>
+                </BrowserRouter>
               </GuestMemorialProvider>
             </MemorialsProvider>
           </UsersProvider>

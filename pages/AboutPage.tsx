@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const AboutPage: React.FC = () => {
   const { siteSettings } = useSiteSettings();
 
-  const defaultHero = 'https://images.unsplash.com/photo-1528913774727-33c943410982?q=80&w=2070&auto=format&fit=crop';
+  const defaultHero = '/about-hero.png';
   const heroImage = siteSettings.aboutHeroImageUrl || defaultHero;
 
   return (

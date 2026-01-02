@@ -35,8 +35,9 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({
 
         if (!memorialId) {
             // If from generic Pricing page, redirect to dashboard to select a memorial
-            // In a real app, we might show a modal here to select a memorial
-            navigate('/dashboard', { state: { message: "Please select a memorial to upgrade." } });
+            navigate(`/dashboard?upgrade=true&plan=${plan}`, {
+                state: { message: `Please select a memorial to upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)}.` }
+            });
             return;
         }
 

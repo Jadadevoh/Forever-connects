@@ -3,6 +3,7 @@ import { Memorial } from '../types';
 export const sampleMemorials: Memorial[] = [
     {
         id: 'mem_sample_001',
+        userId: 'system',
         slug: 'evelyn-rose-bennett-2023',
         firstName: 'Evelyn',
         middleName: 'Rose',
@@ -30,8 +31,8 @@ export const sampleMemorials: Memorial[] = [
             { id: 'gal_002', type: 'image', url: 'https://plus.unsplash.com/premium_photo-1664124381832-72719665bc3c?q=80&w=1170&auto=format&fit=crop', caption: 'The Garden', fileName: 'garden.jpg' }
         ],
         tributes: [
-            { id: 'trib_001', author: 'Sarah Bennett', message: 'Mom, you were my best friend and my rock. I miss you every single day.', createdAt: 1700000000000, likes: 12 },
-            { id: 'trib_002', author: 'The Wilson Family', message: 'Evelyn was a true treasure. Our thoughts are with the family.', createdAt: 1700100000000, likes: 5 }
+            { id: 'trib_001', author: 'Sarah Bennett', message: 'Mom, you were my best friend and my rock. I miss you every single day.', content: 'Mom, you were my best friend and my rock. I miss you every single day.', createdAt: 1700000000000, date: new Date(1700000000000).toISOString(), likes: 12 },
+            { id: 'trib_002', author: 'The Wilson Family', message: 'Evelyn was a true treasure. Our thoughts are with the family.', content: 'Evelyn was a true treasure. Our thoughts are with the family.', createdAt: 1700100000000, date: new Date(1700100000000).toISOString(), likes: 5 }
         ],
         theme: 'classic-rose-classic',
         plan: 'premium',
@@ -43,6 +44,7 @@ export const sampleMemorials: Memorial[] = [
     },
     {
         id: 'mem_sample_002',
+        userId: 'system',
         slug: 'james-arthur-wright',
         firstName: 'James',
         middleName: 'Arthur',
@@ -69,7 +71,7 @@ export const sampleMemorials: Memorial[] = [
             { id: 'gal_004', type: 'image', url: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=1170&auto=format&fit=crop', caption: 'At the cabin', fileName: 'cabin.jpg' }
         ],
         tributes: [
-            { id: 'trib_003', author: 'Mark', message: 'Climb on, brother. See you at the top.', createdAt: 1695500000000, likes: 24 }
+            { id: 'trib_003', author: 'Mark', message: 'Climb on, brother. See you at the top.', content: 'Climb on, brother. See you at the top.', createdAt: 1695500000000, date: new Date(1695500000000).toISOString(), likes: 24 }
         ],
         theme: 'modern-blue-story',
         plan: 'free',
@@ -81,6 +83,7 @@ export const sampleMemorials: Memorial[] = [
     },
     {
         id: 'mem_sample_003',
+        userId: 'system',
         slug: 'mariana-sofia-lopez',
         firstName: 'Mariana',
         middleName: 'Sofia',
@@ -117,6 +120,7 @@ export const sampleMemorials: Memorial[] = [
     },
     {
         id: 'mem_sample_004',
+        userId: 'system',
         slug: 'dr-michael-chang',
         firstName: 'Michael',
         middleName: '',
@@ -142,7 +146,7 @@ export const sampleMemorials: Memorial[] = [
             { id: 'gal_007', type: 'image', url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?q=80&w=987&auto=format&fit=crop', caption: 'Profile', fileName: 'profile.jpg' }
         ],
         tributes: [
-            { id: 'trib_005', author: 'A grateful patient', message: 'He gave me 10 more years with my family. I will never forget him.', createdAt: 1702700000000, likes: 45 }
+            { id: 'trib_005', author: 'A grateful patient', message: 'He gave me 10 more years with my family. I will never forget him.', content: 'He gave me 10 more years with my family. I will never forget him.', createdAt: 1702700000000, date: new Date(1702700000000).toISOString(), likes: 45 }
         ],
         theme: 'peaceful-green-classic',
         plan: 'eternal',
@@ -154,6 +158,7 @@ export const sampleMemorials: Memorial[] = [
     },
     {
         id: 'mem_sample_005',
+        userId: 'system',
         slug: 'liam-thomas-odonnell',
         firstName: 'Liam',
         middleName: 'Thomas',
@@ -177,8 +182,8 @@ export const sampleMemorials: Memorial[] = [
         <p>Fly high, Liam. We will look for you in the stars.</p>`,
         gallery: [],
         tributes: [
-            { id: 'trib_006', author: 'Coach Miller', message: 'Best point guard I ever coached. Miss you, kid.', createdAt: 1691300000000, likes: 88 },
-            { id: 'trib_007', author: 'Jenna', message: 'Prom won\'t be the same without you.', createdAt: 1691400000000, likes: 32 }
+            { id: 'trib_006', author: 'Coach Miller', message: 'Best point guard I ever coached. Miss you, kid.', content: 'Best point guard I ever coached. Miss you, kid.', createdAt: 1691300000000, date: new Date(1691300000000).toISOString(), likes: 88 },
+            { id: 'trib_007', author: 'Jenna', message: 'Prom won\'t be the same without you.', content: 'Prom won\'t be the same without you.', createdAt: 1691400000000, date: new Date(1691400000000).toISOString(), likes: 32 }
         ],
         theme: 'modern-blue-classic',
         plan: 'free',

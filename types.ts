@@ -37,6 +37,7 @@ export interface User {
   followedMemorials?: string[];
   role?: 'user' | 'admin';
   createdAt?: number;
+  plan?: string;
 }
 
 interface BaseGalleryItem {
@@ -118,9 +119,10 @@ export interface Memorial {
   donations: Donation[];
   followers?: string[];
   aiHighlights?: string[];
+  createdAt: number;
 }
 
-export interface MemorialCreationData extends Omit<Memorial, 'id' | 'userId' | 'slug' | 'status' | 'tributes' | 'followers' | 'aiHighlights' | 'profileImage'> {
+export interface MemorialCreationData extends Omit<Memorial, 'id' | 'userId' | 'slug' | 'status' | 'tributes' | 'followers' | 'aiHighlights' | 'profileImage' | 'createdAt'> {
   relationship: string;
   profileImage: Photo | null;
   layout?: string;

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useGuestMemorial } from '../hooks/useGuestMemorial';
 import { useMemorials } from '../hooks/useMemorials';
 import { Memorial, User } from '../types';
+import { getFriendlyErrorMessage } from '../utils/errorUtils';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,20 +19,20 @@ const LoginPage: React.FC = () => {
 
   const handlePostLogin = (user: User) => {
     if (location.state?.fromCreate && guestMemorialData) {
-       // Check completeness
-       if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
-            const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
-              ...guestMemorialData,
-              userId: user.id,
-              status: 'draft',
-            };
-            addMemorial(memorialToCreate);
-            clearGuestMemorial();
-            navigate('/dashboard');
-       } else {
-            // Incomplete draft, go back to editor
-            navigate('/create');
-       }
+      // Check completeness
+      if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
+        const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
+          ...guestMemorialData,
+          userId: user.id,
+          status: 'draft',
+        };
+        addMemorial(memorialToCreate);
+        clearGuestMemorial();
+        navigate('/dashboard');
+      } else {
+        // Incomplete draft, go back to editor
+        navigate('/create');
+      }
     } else {
       navigate('/dashboard');
     }
@@ -43,7 +44,7 @@ const LoginPage: React.FC = () => {
       const loggedInUser = await loginFn();
       handlePostLogin(loggedInUser);
     } catch (err: any) {
-      setError(err.message || 'Failed to log in. Please check your credentials.');
+      setError(getFriendlyErrorMessage(err));
     }
   };
 
@@ -51,7 +52,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     handleLogin(() => login(email, password));
   };
-  
+
   const handleGoogleSubmit = () => {
     handleLogin(googleLogin);
   };
@@ -72,12 +73,12 @@ const LoginPage: React.FC = () => {
           <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputStyles} autoComplete="email" />
         </div>
         <div>
-            <div className="flex justify-between items-center">
-                <label htmlFor="password" className={labelStyles}>Password</label>
-                 <Link to="/forgot-password" className="text-sm font-medium text-dusty-blue hover:text-deep-navy">
-                    Forgot Password?
-                </Link>
-            </div>
+          <div className="flex justify-between items-center">
+            <label htmlFor="password" className={labelStyles}>Password</label>
+            <Link to="/forgot-password" className="text-sm font-medium text-dusty-blue hover:text-deep-navy">
+              Forgot Password?
+            </Link>
+          </div>
           <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputStyles} autoComplete="current-password" />
         </div>
         <div>
@@ -111,4 +112,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-    

@@ -8,6 +8,7 @@ import { Memorial } from '../types';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendWelcomeEmail } from '../services/emailService';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { getFriendlyErrorMessage } from '../utils/errorUtils';
 
 const SignUpPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -24,20 +25,20 @@ const SignUpPage: React.FC = () => {
 
   const handlePostLogin = (user: any) => {
     if (location.state?.fromCreate && guestMemorialData) {
-        // Check if the memorial is complete enough to be published (e.g. has a profile image)
-        if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
-            const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
-              ...guestMemorialData,
-              userId: user.id,
-              status: 'draft',
-            };
-            addMemorial(memorialToCreate);
-            clearGuestMemorial();
-            navigate('/dashboard');
-        } else {
-            // Data is incomplete (e.g. user just clicked "Save Progress"), so redirect back to editor to finish
-            navigate('/create');
-        }
+      // Check if the memorial is complete enough to be published (e.g. has a profile image)
+      if (guestMemorialData.profileImage && guestMemorialData.firstName && guestMemorialData.lastName && guestMemorialData.theme) {
+        const memorialToCreate: Omit<Memorial, 'id' | 'slug' | 'tributes'> = {
+          ...guestMemorialData,
+          userId: user.id,
+          status: 'draft',
+        };
+        addMemorial(memorialToCreate);
+        clearGuestMemorial();
+        navigate('/dashboard');
+      } else {
+        // Data is incomplete (e.g. user just clicked "Save Progress"), so redirect back to editor to finish
+        navigate('/create');
+      }
     } else {
       navigate('/dashboard');
     }
@@ -47,12 +48,12 @@ const SignUpPage: React.FC = () => {
     setError('');
     try {
       const newUser = await signupFn();
-      
+
       sendWelcomeEmail(newUser, apiSettings, siteSettings.siteName);
       handlePostLogin(newUser);
 
     } catch (err: any) {
-      setError(err.message || 'Failed to sign up. Please try again.');
+      setError(getFriendlyErrorMessage(err));
     }
   };
 
@@ -60,11 +61,11 @@ const SignUpPage: React.FC = () => {
     e.preventDefault();
     handleSignup(() => signup(name, email, password));
   };
-  
+
   const handleGoogleSubmit = () => {
     handleSignup(googleLogin);
   };
-  
+
   const inputStyles = "mt-1 block w-full rounded-md bg-white border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue sm:text-sm text-deep-navy px-3 py-2";
   const labelStyles = "block text-sm font-medium text-deep-navy/90";
 
@@ -119,4 +120,3 @@ const SignUpPage: React.FC = () => {
 };
 
 export default SignUpPage;
-    

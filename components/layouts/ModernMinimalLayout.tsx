@@ -20,8 +20,8 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
         // If AI highlights exist, use the first one as a hero reflection
         if (memorial.aiHighlights && memorial.aiHighlights.length > 0) {
             setReflection(memorial.aiHighlights[0]);
-        } else if (memorial.biography) {
-            setReflection("A life beautifully lived, echoing through the hearts of those left behind.");
+        } else {
+            setReflection(null);
         }
     }, [memorial]);
 

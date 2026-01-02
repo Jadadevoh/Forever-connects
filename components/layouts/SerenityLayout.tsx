@@ -17,18 +17,11 @@ const SerenityLayout: React.FC<SerenityLayoutProps> = ({ memorial, fullName }) =
     // Candle state removed
 
     useEffect(() => {
-        // Use AI highlights if available, or fetch/set reflection
+        // Use AI highlights if available
         if (memorial.aiHighlights && memorial.aiHighlights.length > 0) {
             setReflection(memorial.aiHighlights[0]);
-        } else if (memorial.biography) {
-            const fetchReflection = async () => {
-                // If we don't have highlights, we might want to generate or just use a fallback. 
-                // For now, let's use a static fallback to avoid async fetch in layout mount if possible, 
-                // or just use the bio snippet.
-                // The user snippet called `generateLifeReflection`. I'll assume we can use a fallback or the first sentence.
-                setReflection("A life beautifully lived, echoing through the hearts of those left behind.");
-            };
-            fetchReflection();
+        } else {
+            setReflection(null);
         }
     }, [memorial]);
 

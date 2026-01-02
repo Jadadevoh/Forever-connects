@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { MemorialPlan } from '../types';
 import CheckoutButton from '../components/CheckoutButton';
@@ -36,12 +36,15 @@ const PaymentMethods: React.FC = () => {
 
 const PricingPage: React.FC = () => {
 
+    const location = useLocation();
+    const memorialId = location.state?.memorialId;
+
     const plans = [
         {
             id: 'free',
             name: 'Remembrance Memorial',
             price: 'Free',
-            frequency: 'One memorial',
+            frequency: 'forever',
             description: 'A simple, beautiful place to honor a loved one and share memories with close family and friends.',
             features: [
                 { text: 'Memorial page', included: true },
@@ -49,11 +52,14 @@ const PricingPage: React.FC = () => {
                 { text: 'Written tributes', included: true },
                 { text: 'Calm, classic theme', included: true },
                 { text: 'Private sharing link', included: true },
+                { text: 'Unlimited photos & videos', included: false },
+                { text: 'Premium Themes', included: false },
+                { text: 'Music Playlist', included: false },
             ],
             bestFor: [
                 'Immediate remembrance',
                 'Small, private circles',
-                'Short-term or simple memorials'
+                'Simple tributes'
             ],
             cta: 'Create This Memorial',
             isFeatured: false,
@@ -63,22 +69,23 @@ const PricingPage: React.FC = () => {
             name: 'Living Memorial',
             price: '$4.99',
             frequency: 'per memorial / month',
-            description: 'A richer memorial that grows as memories are added and shared over time.',
+            description: 'A richer memorial that grows as memories are added, shared, and celebrated over time.',
             features: [
                 { text: 'Everything in Remembrance', included: true },
                 { text: 'Unlimited photos', included: true },
                 { text: 'Videos & audio recordings', included: true },
-                { text: 'Music playlist', included: true },
-                { text: 'Custom themes', included: true },
-                { text: 'AI-powered search across memories', included: true },
-                { text: 'Ongoing updates and additions for this memorial', included: true },
+                { text: 'Background music', included: true },
+                { text: 'All Premium Themes', included: true },
+                { text: 'AI Biography Assistant', included: true },
+                { text: 'Invite Unlimited Contributors', included: true },
+                { text: 'Permanent Hosting', included: false },
             ],
             bestFor: [
-                'Families actively contributing memories',
+                'Families sharing many photos',
                 'Multimedia storytelling',
-                'Annual remembrance and reflection'
+                'Ongoing remembrance'
             ],
-            cta: 'Upgrade This Memorial',
+            cta: 'Upgrade to Premium',
             isFeatured: true,
         },
         {
@@ -86,21 +93,23 @@ const PricingPage: React.FC = () => {
             name: 'Eternal Memorial',
             price: '$99',
             frequency: 'per memorial - one-time',
-            description: 'A permanent tribute, preserved with care and hosted forever.',
+            description: 'A permanent tribute, preserved with care and hosted forever. No monthly fees.',
             features: [
                 { text: 'Everything in Living Memorial', included: true },
-                { text: 'No renewals or subscriptions', included: true },
-                { text: 'Permanent hosting for this memorial', included: true },
+                { text: 'No monthly fees ever', included: true },
+                { text: 'Permanent hosting guarantee', included: true },
                 { text: 'Priority support', included: true },
-                { text: 'Long-term preservation guarantee', included: true },
+                { text: 'Digital Preservation', included: true },
                 { text: 'Peace of mind for future generations', included: true },
+                { text: 'Secured Legacy', included: true },
+                { text: 'One-time payment', included: true },
             ],
             bestFor: [
                 'Long-term legacy',
-                'Estate and family preservation',
-                'Families who want permanence'
+                'One-time payment preference',
+                'Permanent preservation'
             ],
-            cta: 'Preserve This Memorial Forever',
+            cta: 'Secure Forever',
             isFeatured: false,
         },
     ];
@@ -165,6 +174,7 @@ const PricingPage: React.FC = () => {
                             ) : (
                                 <CheckoutButton
                                     plan={plan.id as MemorialPlan}
+                                    memorialId={memorialId}
                                     className={`w-full text-center block font-bold py-3 px-4 rounded-lg transition duration-300 ${plan.isFeatured ? 'bg-dusty-blue text-white hover:opacity-90 shadow-md' : 'bg-deep-navy text-white hover:bg-deep-navy/90'}`}
                                 >
                                     {plan.cta}

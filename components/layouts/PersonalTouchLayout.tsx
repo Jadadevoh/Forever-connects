@@ -35,9 +35,11 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                         <p className="text-lg sm:text-xl font-medium text-slate-500 dark:text-slate-400">
                             {formatDate(memorial.birthDate)} — {formatDate(memorial.deathDate)}
                         </p>
-                        <p className="text-base text-slate-400 dark:text-slate-500 italic">
-                            "{memorial.aiHighlights && memorial.aiHighlights.length > 0 ? memorial.aiHighlights[0] : "A life beautifully lived, a heart deeply loved."}"
-                        </p>
+                        {memorial.aiHighlights && memorial.aiHighlights.length > 0 && (
+                            <p className="text-base text-slate-400 dark:text-slate-500 italic">
+                                "{memorial.aiHighlights[0]}"
+                            </p>
+                        )}
                     </div>
                     <div className="flex flex-wrap gap-3 mt-6">
                         <button onClick={() => setActiveTab('tributes')} className="flex items-center gap-2 bg-deep-navy dark:bg-white text-white dark:text-deep-navy px-6 py-3 rounded-full font-bold shadow-lg hover:transform hover:-translate-y-1 transition-all">

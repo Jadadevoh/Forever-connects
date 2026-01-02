@@ -460,6 +460,7 @@ const CreateMemorialPage: React.FC = () => {
             const memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes' | 'followers'> = {
                 ...dataToSave, gender: dataToSave.gender || undefined, userId: currentUser!.id,
                 middleName: dataToSave.middleName || undefined, state: dataToSave.state || undefined,
+                createdAt: Date.now(),
 
                 profileImage: profileImageToUse,
                 theme: selectedTheme || 'timeless',
@@ -503,6 +504,7 @@ const CreateMemorialPage: React.FC = () => {
         const memorialData: Omit<Memorial, 'id' | 'slug' | 'tributes' | 'followers'> = {
             ...dataToSave, gender: dataToSave.gender || undefined, userId: currentUser!.id,
             middleName: dataToSave.middleName || undefined, state: dataToSave.state || undefined,
+            createdAt: Date.now(),
             profileImage: profileImageToUse,
             theme: selectedTheme || 'timeless',
             layout: formData.layout || 'timeless',

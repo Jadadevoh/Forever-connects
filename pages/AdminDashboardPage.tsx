@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useMemorials } from '../hooks/useMemorials';
 import { Link } from 'react-router-dom';
-import { User } from '../types';
+import { MemorialPlan, User } from '../types';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { useUsers } from '../hooks/useUsers';
 import UserEditModal from '../components/UserEditModal';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { FEATURE_List, FeatureName } from '../config/features';
 
 const AdminDashboardPage: React.FC = () => {
     const { users, deleteUser } = useUsers();
-    const { memorials, deleteMemorial } = useMemorials();
+    const { memorials, deleteMemorial, updateMemorial } = useMemorials();
     const { apiSettings, saveApiSettings } = useApiSettings();
     const { siteSettings, saveSiteSettings } = useSiteSettings();
 
     const [activeTab, setActiveTab] = useState('overview');
-    
+
     // State for user editing modal
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -22,17 +23,22 @@ const AdminDashboardPage: React.FC = () => {
     const [apiFormState, setApiFormState] = useState(apiSettings);
     const [siteFormState, setSiteFormState] = useState(siteSettings);
 
+    const [featureOverrides, setFeatureOverrides] = useState<Record<FeatureName, MemorialPlan[]>>(
+        siteSettings.featureOverrides || {} as Record<FeatureName, MemorialPlan[]>
+    );
+
     useEffect(() => {
         setApiFormState(apiSettings);
     }, [apiSettings]);
 
     useEffect(() => {
         setSiteFormState(siteSettings);
+        setFeatureOverrides(siteSettings.featureOverrides || {} as Record<FeatureName, MemorialPlan[]>);
     }, [siteSettings]);
 
     const handleApiInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value, type, checked } = e.target;
-        setApiFormState(prev => ({ 
+        setApiFormState(prev => ({
             ...prev,
             [id]: type === 'checkbox' ? checked : value
         }));
@@ -43,7 +49,34 @@ const AdminDashboardPage: React.FC = () => {
         setSiteFormState(prev => ({ ...prev, [id]: value }));
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImageUrl') => {
+    const handleFeatureToggle = (featureName: FeatureName, plan: MemorialPlan) => {
+        setFeatureOverrides(prev => {
+            const currentPlans = prev[featureName] || FEATURE_List.find(f => f.name === featureName)?.availableIn || [];
+            const hasPlan = currentPlans.includes(plan);
+
+            let newPlans;
+            if (hasPlan) {
+                newPlans = currentPlans.filter(p => p !== plan);
+            } else {
+                newPlans = [...currentPlans, plan];
+            }
+
+            return {
+                ...prev,
+                [featureName]: newPlans
+            };
+        });
+    };
+
+    const handleSaveFeatureSettings = () => {
+        saveSiteSettings({
+            ...siteSettings,
+            featureOverrides: featureOverrides
+        });
+        alert('Feature settings saved!');
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImageUrl' | 'aboutHeroImageUrl') => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -108,7 +141,7 @@ const AdminDashboardPage: React.FC = () => {
     );
 
     const renderTabContent = () => {
-        switch(activeTab) {
+        switch (activeTab) {
             case 'overview':
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,7 +157,7 @@ const AdminDashboardPage: React.FC = () => {
                 );
             case 'users':
                 return (
-                     <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
                         <h2 className="text-2xl font-serif text-deep-navy mb-4">User Management</h2>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left text-deep-navy">
@@ -132,7 +165,6 @@ const AdminDashboardPage: React.FC = () => {
                                     <tr>
                                         <th scope="col" className="px-6 py-3">Name</th>
                                         <th scope="col" className="px-6 py-3">Email</th>
-                                        <th scope="col" className="px-6 py-3">Plan</th>
                                         <th scope="col" className="px-6 py-3">Role</th>
                                         <th scope="col" className="px-6 py-3">Actions</th>
                                     </tr>
@@ -142,11 +174,10 @@ const AdminDashboardPage: React.FC = () => {
                                         <tr key={user.id} className="bg-white border-b border-silver">
                                             <td className="px-6 py-4 font-medium whitespace-nowrap">{user.name}</td>
                                             <td className="px-6 py-4">{user.email}</td>
-                                            <td className="px-6 py-4 capitalize">{user.plan}</td>
                                             <td className="px-6 py-4 capitalize">{user.role}</td>
                                             <td className="px-6 py-4 flex items-center space-x-2">
                                                 <button onClick={() => handleEditUser(user)} className="font-medium text-dusty-blue hover:underline">Edit</button>
-                                                <button onClick={() => handleDeleteUser(user.id, user.name)} className="font-medium text-red-600 hover:underline">Delete</button>
+                                                <button onClick={() => handleDeleteUser(user.id, user.name || 'User')} className="font-medium text-red-600 hover:underline">Delete</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -156,7 +187,7 @@ const AdminDashboardPage: React.FC = () => {
                     </div>
                 );
             case 'memorials':
-                 return (
+                return (
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
                         <h2 className="text-2xl font-serif text-deep-navy mb-4">Memorial Management</h2>
                         <div className="overflow-x-auto">
@@ -165,6 +196,7 @@ const AdminDashboardPage: React.FC = () => {
                                     <tr>
                                         <th scope="col" className="px-6 py-3">Full Name</th>
                                         <th scope="col" className="px-6 py-3">Dates</th>
+                                        <th scope="col" className="px-6 py-3">Plan</th>
                                         <th scope="col" className="px-6 py-3">Created By (User ID)</th>
                                         <th scope="col" className="px-6 py-3">Actions</th>
                                     </tr>
@@ -176,10 +208,21 @@ const AdminDashboardPage: React.FC = () => {
                                                 {[m.firstName, m.middleName, m.lastName].filter(Boolean).join(' ')}
                                             </td>
                                             <td className="px-6 py-4">{new Date(m.birthDate).getFullYear()} - {new Date(m.deathDate).getFullYear()}</td>
+                                            <td className="px-6 py-4">
+                                                <select
+                                                    value={m.plan || 'free'}
+                                                    onChange={(e) => updateMemorial(m.id, { plan: e.target.value as MemorialPlan })}
+                                                    className="block w-full rounded-md border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue text-xs sm:text-sm py-1"
+                                                >
+                                                    <option value="free">Remembrance (Free)</option>
+                                                    <option value="premium">Living (Premium)</option>
+                                                    <option value="eternal">Eternal (One-time)</option>
+                                                </select>
+                                            </td>
                                             <td className="px-6 py-4">{m.userId || 'N/A'}</td>
                                             <td className="px-6 py-4 flex items-center space-x-2">
                                                 <Link to={`/memorial/${m.slug}`} className="font-medium text-dusty-blue hover:underline">View</Link>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteMemorial(m.id, [m.firstName, m.lastName].join(' '))}
                                                     className="font-medium text-red-600 hover:underline"
                                                 >
@@ -192,7 +235,7 @@ const AdminDashboardPage: React.FC = () => {
                             </table>
                         </div>
                     </div>
-                 );
+                );
             case 'customization':
                 return (
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
@@ -219,6 +262,11 @@ const AdminDashboardPage: React.FC = () => {
                                     <input type="file" id="heroImageUrl" onChange={(e) => handleImageUpload(e, 'heroImageUrl')} accept="image/*" className="mt-1 text-sm" />
                                     {siteFormState.heroImageUrl && <img src={siteFormState.heroImageUrl} alt="Hero preview" className="mt-2 h-20 w-auto object-cover rounded-md" />}
                                 </div>
+                                <div>
+                                    <label htmlFor="aboutHeroImageUrl" className={labelStyles}>About Page Hero Image</label>
+                                    <input type="file" id="aboutHeroImageUrl" onChange={(e) => handleImageUpload(e, 'aboutHeroImageUrl')} accept="image/*" className="mt-1 text-sm" />
+                                    {siteFormState.aboutHeroImageUrl && <img src={siteFormState.aboutHeroImageUrl} alt="About hero preview" className="mt-2 h-20 w-auto object-cover rounded-md" />}
+                                </div>
                             </div>
                             <div className="text-right">
                                 <button type="submit" className="bg-dusty-blue hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg">
@@ -228,13 +276,71 @@ const AdminDashboardPage: React.FC = () => {
                         </form>
                     </div>
                 );
+            case 'features':
+                return (
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 className="text-2xl font-serif text-deep-navy">Plans & Features</h2>
+                                <p className="text-soft-gray text-sm mt-1">Configure which features are available for each subscription plan.</p>
+                            </div>
+                            <button
+                                onClick={handleSaveFeatureSettings}
+                                className="bg-dusty-blue hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                Save Feature Settings
+                            </button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-deep-navy border-collapse">
+                                <thead>
+                                    <tr className="bg-pale-sky">
+                                        <th className="px-6 py-4 border border-silver w-1/3">Feature</th>
+                                        <th className="px-6 py-4 border border-silver text-center">Free</th>
+                                        <th className="px-6 py-4 border border-silver text-center">Premium</th>
+                                        <th className="px-6 py-4 border border-silver text-center">Eternal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {FEATURE_List.map(feature => (
+                                        <tr key={feature.name} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 border border-silver">
+                                                <div className="font-medium text-deep-navy">{feature.displayName}</div>
+                                                <div className="text-xs text-soft-gray mt-1">{feature.description}</div>
+                                            </td>
+                                            {['free', 'premium', 'eternal'].map((plan) => {
+                                                // Determine if checked: check overrides first, then default config
+                                                const currentOverride = featureOverrides[feature.name];
+                                                const isChecked = currentOverride
+                                                    ? currentOverride.includes(plan as MemorialPlan)
+                                                    : feature.availableIn.includes(plan as MemorialPlan);
+
+                                                return (
+                                                    <td key={`${feature.name}-${plan}`} className="px-6 py-4 border border-silver text-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isChecked}
+                                                            onChange={() => handleFeatureToggle(feature.name, plan as MemorialPlan)}
+                                                            className="h-5 w-5 text-dusty-blue rounded border-silver focus:ring-dusty-blue cursor-pointer"
+                                                        />
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
             case 'settings':
                 return (
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-silver">
                         <h2 className="text-2xl font-serif text-deep-navy mb-4">API & Service Configuration</h2>
                         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md" role="alert">
-                          <p className="font-bold">Security Notice</p>
-                          <p>For security, API keys must be managed in your hosting environment's "Secrets" panel. The Gemini AI key, for example, must be a secret named `API_KEY` to be used by the application.</p>
+                            <p className="font-bold">Security Notice</p>
+                            <p>For security, API keys must be managed in your hosting environment's "Secrets" panel. The Gemini AI key, for example, must be a secret named `API_KEY` to be used by the application.</p>
                         </div>
                         <form onSubmit={handleSaveApiSettings} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -416,6 +522,7 @@ const AdminDashboardPage: React.FC = () => {
                     <button onClick={() => setActiveTab('overview')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'overview' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>Overview</button>
                     <button onClick={() => setActiveTab('users')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'users' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>Users</button>
                     <button onClick={() => setActiveTab('memorials')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'memorials' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>Memorials</button>
+                    <button onClick={() => setActiveTab('features')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'features' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>Plans & Features</button>
                     <button onClick={() => setActiveTab('customization')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'customization' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>Site Customization</button>
                     <button onClick={() => setActiveTab('settings')} className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-3 font-semibold text-sm sm:text-base transition-colors duration-200 text-center ${activeTab === 'settings' ? 'text-deep-navy border-b-2 border-dusty-blue' : 'text-soft-gray hover:text-deep-navy'}`}>API Settings</button>
                 </div>

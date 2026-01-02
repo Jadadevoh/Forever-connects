@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to all files
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Allow authenticated users to upload files to their own folder
+    match /uploads/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to upload to a general 'memorials' folder for now (flexible)
+    match /memorials/{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+  }
+}

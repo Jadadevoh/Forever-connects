@@ -5,17 +5,19 @@ interface AuthRequiredModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthRedirect: (path: '/login' | '/signup') => void;
+  title?: string;
+  message?: string;
 }
 
-const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose, onAuthRedirect }) => {
+const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose, onAuthRedirect, title, message }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        onClick={onClose}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center transform transition-all"
         onClick={e => e.stopPropagation()}
       >
@@ -24,9 +26,9 @@ const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose, 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-2xl font-serif font-bold text-deep-navy mt-4">Save Your Beautiful Memorial</h3>
+        <h3 className="text-2xl font-serif font-bold text-deep-navy mt-4">{title || "Save Your Beautiful Memorial"}</h3>
         <p className="mt-2 text-deep-navy/80">
-          You're almost there! To securely save this memorial and publish it for others to see, please create a free account.
+          {message || "You're almost there! To securely save this memorial and publish it for others to see, please create a free account."}
         </p>
         <p className="mt-1 text-sm text-soft-gray">
           Don't worry, all your photos and text have been saved.

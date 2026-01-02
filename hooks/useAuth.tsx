@@ -1,16 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  GoogleAuthProvider, 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
   signInWithPopup,
-  updateProfile,
-  User as FirebaseUser
+  updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 interface AuthContextType {
@@ -33,38 +32,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Sync Firebase Auth state with Firestore User Profile
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribeUserDoc: () => void;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
 
-          if (userDoc.exists()) {
-            setCurrentUser(userDoc.data() as User);
-          } else {
-            // Create user profile in Firestore if it doesn't exist (e.g. first Google Login)
-            const newUser: User = {
-              id: firebaseUser.uid,
-              name: firebaseUser.displayName || 'User',
-              email: firebaseUser.email || '',
-              plan: 'free',
-              role: 'user',
-              createdAt: Date.now()
-            };
-            await setDoc(userDocRef, newUser);
-            setCurrentUser(newUser);
-          }
+          // Listen to User Document
+          unsubscribeUserDoc = onSnapshot(userDocRef, async (docSnap) => {
+            if (docSnap.exists()) {
+              const userData = docSnap.data() as User;
+              // Force Admin for specific user helper
+              if (userData.email === 'jadadevoh@gmail.com' && userData.role !== 'admin') {
+                userData.role = 'admin';
+                await setDoc(userDocRef, { ...userData, role: 'admin' }, { merge: true });
+              }
+              setCurrentUser(prev => prev ? { ...prev, ...userData } : userData);
+            } else {
+              // Create user profile if missing
+              const isSuperAdmin = firebaseUser.email === 'jadadevoh@gmail.com';
+              const newUser: User = {
+                id: firebaseUser.uid,
+                name: firebaseUser.displayName || 'User',
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || 'User',
+                role: isSuperAdmin ? 'admin' : 'user',
+                createdAt: Date.now()
+              };
+              await setDoc(userDocRef, newUser);
+              setCurrentUser(newUser);
+            }
+          });
+
         } catch (error: any) {
-          console.error("Error fetching user profile:", error.message);
+          console.error("Error setting up user listeners:", error.message);
           setCurrentUser(null);
         }
       } else {
         setCurrentUser(null);
+        if (unsubscribeUserDoc) unsubscribeUserDoc();
       }
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeUserDoc) unsubscribeUserDoc();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
@@ -73,31 +88,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
       const userData = userDoc.data() as User;
+      // Force Admin check on login
+      if (userData.email === 'jadadevoh@gmail.com' && userData.role !== 'admin') {
+        userData.role = 'admin';
+        await updateDoc(userDocRef, { role: 'admin' });
+      }
       setCurrentUser(userData);
       return userData;
     } else {
       throw new Error("User profile not found");
     }
   };
-  
+
   const googleLogin = async (): Promise<User> => {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
-    
+
     // The onAuthStateChanged listener handles fetching/creating the Firestore doc
     // We just wait a brief moment for state to update or manually fetch to return immediately
     const userDocRef = doc(db, 'users', userCredential.user.uid);
     const userDoc = await getDoc(userDocRef);
-    
+
     if (userDoc.exists()) {
-      return userDoc.data() as User;
+      const userData = userDoc.data() as User;
+      if (userData.email === 'jadadevoh@gmail.com' && userData.role !== 'admin') {
+        userData.role = 'admin';
+        await updateDoc(userDocRef, { role: 'admin' });
+      }
+      return userData;
     } else {
+      const isSuperAdmin = userCredential.user.email === 'jadadevoh@gmail.com';
       const newUser: User = {
         id: userCredential.user.uid,
         name: userCredential.user.displayName || 'Google User',
         email: userCredential.user.email || '',
-        plan: 'free',
-        role: 'user',
+        displayName: userCredential.user.displayName || 'Google User',
+        role: isSuperAdmin ? 'admin' : 'user',
         createdAt: Date.now()
       };
       await setDoc(userDocRef, newUser);
@@ -109,12 +135,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName: name });
 
+    const isSuperAdmin = email === 'jadadevoh@gmail.com';
     const newUser: User = {
       id: userCredential.user.uid,
       name,
       email,
-      plan: 'free',
-      role: 'user',
+      displayName: name,
+      role: isSuperAdmin ? 'admin' : 'user',
       createdAt: Date.now()
     };
 
@@ -122,12 +149,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCurrentUser(newUser);
     return newUser;
   };
-  
+
   const logout = async () => {
     await signOut(auth);
     setCurrentUser(null);
   };
-  
+
   const updateCurrentUser = async (data: Partial<Omit<User, 'id' | 'email' | 'role'>>) => {
     if (currentUser) {
       const userDocRef = doc(db, 'users', currentUser.id);

@@ -38,7 +38,7 @@ export const PLAN_PRICING: Record<Exclude<MemorialPlan, 'free'>, PlanPricing> = 
  * Check if Stripe is configured
  */
 export function isStripeConfigured(): boolean {
-    return !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    return !!import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 }
 
 /**
@@ -63,7 +63,8 @@ export function formatPrice(pricing: PlanPricing): string {
  */
 export async function createCheckoutSession(
     plan: Exclude<MemorialPlan, 'free'>,
-    userId: string
+    userId: string,
+    memorialId?: string
 ): Promise<{ sessionId: string; url: string }> {
     if (!userId) throw new Error('User ID is required');
 
@@ -76,11 +77,17 @@ export async function createCheckoutSession(
     try {
         const checkoutSessionsRef = collection(db, 'customers', userId, 'checkout_sessions');
 
-        const docRef = await addDoc(checkoutSessionsRef, {
+        const sessionData: any = {
             price: priceId,
-            success_url: window.location.origin + `/payment/success?plan=${plan}`,
+            success_url: window.location.origin + `/payment/success?plan=${plan}${memorialId ? `&memorialId=${memorialId}` : ''}`,
             cancel_url: window.location.origin + '/payment/cancel',
-        });
+        };
+
+        if (memorialId) {
+            sessionData.metadata = { memorialId };
+        }
+
+        const docRef = await addDoc(checkoutSessionsRef, sessionData);
 
         // Wait for the checkout session to be created by the extension
         return new Promise((resolve, reject) => {

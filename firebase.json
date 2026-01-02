@@ -13,5 +13,12 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

@@ -1,67 +1,15 @@
+import { FeatureName } from './config/features';
+
 export interface SiteSettings {
   siteName: string;
   logoUrl: string;
   heroImageUrl: string;
+  aboutHeroImageUrl?: string;
+  featureOverrides?: Record<FeatureName, MemorialPlan[]>;
 }
 
 export type GalleryItemType = 'image' | 'video' | 'audio' | 'document' | 'link';
 export type MemorialPlan = 'free' | 'premium' | 'eternal';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  plan: MemorialPlan;
-  role?: 'user' | 'admin';
-  createdAt?: number; 
-}
-
-interface BaseGalleryItem {
-  id: string;
-  type: GalleryItemType;
-  caption?: string;
-}
-
-export interface MediaItem extends BaseGalleryItem {
-  type: 'image' | 'video' | 'audio' | 'document';
-  url: string; 
-  fileName: string;
-}
-
-export interface LinkItem extends BaseGalleryItem {
-  type: 'link';
-  url: string;
-  title: string;
-}
-
-export type GalleryItem = MediaItem | LinkItem;
-
-export interface Photo {
-  id: string;
-  url: string; 
-  caption?: string;
-}
-
-export interface Tribute {
-  id: string;
-  author: string;
-  message: string;
-  createdAt: number;
-  photo?: Photo;
-  likes: number;
-}
-
-export interface Donation {
-  id: string;
-  name: string;
-  email: string;
-  amount: number;
-  message: string;
-  isAnonymous: boolean;
-  date: number;
-  type: 'one-time' | 'monthly';
-  payoutStatus: 'pending' | 'paid';
-}
 
 export interface DonationInfo {
   isEnabled: boolean;
@@ -76,14 +24,76 @@ export interface DonationInfo {
 export interface EmailSettings {
   senderName: string;
   replyToEmail: string;
-  headerImageUrl: string;
-  footerMessage: string;
+  headerImageUrl?: string;
+  footerMessage?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  displayName?: string;
+  name?: string; // Legacy/Convenience
+  photoURL?: string;
+  followedMemorials?: string[];
+  role?: 'user' | 'admin';
+  createdAt?: number;
+}
+
+interface BaseGalleryItem {
+  id: string;
+  type: GalleryItemType;
+  caption?: string;
+}
+
+export interface MediaItem extends BaseGalleryItem {
+  type: 'image' | 'video' | 'audio' | 'document';
+  url: string;
+  fileName: string;
+}
+
+export interface LinkItem extends BaseGalleryItem {
+  type: 'link';
+  url: string;
+  title: string;
+}
+
+export type GalleryItem = MediaItem | LinkItem;
+
+export interface Photo {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
+export interface Tribute {
+  id: string;
+  author: string;
+  message?: string; // Legacy support
+  content: string; // New field
+  createdAt?: number; // Legacy support
+  date: string; // New field (ISO string)
+  photo?: Photo;
+  likes: number;
+}
+
+export interface Donation {
+  id: string;
+  name: string;
+  email: string;
+  amount: number;
+  message?: string;
+  date: number;
+  isAnonymous: boolean;
+  type: 'one-time' | 'monthly';
+  payoutStatus: 'pending' | 'paid';
 }
 
 export interface Memorial {
-  id:string;
-  userId?: string;
+  id: string;
+  userId: string;
   slug: string;
+  status: 'draft' | 'active';
+  plan: MemorialPlan;
   firstName: string;
   middleName?: string;
   lastName: string;
@@ -93,6 +103,7 @@ export interface Memorial {
   city: string;
   state?: string;
   country: string;
+  restingPlace?: string;
   causeOfDeath: string[];
   isCauseOfDeathPrivate: boolean;
   profileImage: Photo;
@@ -100,44 +111,31 @@ export interface Memorial {
   gallery: GalleryItem[];
   tributes: Tribute[];
   theme: string;
-  plan: MemorialPlan;
+  layout?: string;
+  colorPalette?: string;
+  emailSettings: EmailSettings;
   donationInfo: DonationInfo;
   donations: Donation[];
-  emailSettings: EmailSettings;
-  status: 'draft' | 'active' | 'blocked';
-  createdAt?: number;
+  followers?: string[];
+  aiHighlights?: string[];
 }
 
-export interface MemorialCreationData {
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  birthDate: string;
-  deathDate: string;
-  gender: string;
-  city: string;
-  state: string;
-  country: string;
-  causeOfDeath: string[];
-  isCauseOfDeathPrivate: boolean;
+export interface MemorialCreationData extends Omit<Memorial, 'id' | 'userId' | 'slug' | 'status' | 'tributes' | 'followers' | 'aiHighlights' | 'profileImage'> {
   relationship: string;
   profileImage: Photo | null;
-  biography: string;
-  gallery: GalleryItem[];
-  plan: MemorialPlan;
-  donationInfo: DonationInfo;
-  emailSettings: EmailSettings;
+  layout?: string;
+  colorPalette?: string;
 }
 
 export interface Theme {
-    name: string;
-    title: string;
-    description: string;
-    colorTheme: string;
-    layout: 'classic' | 'story';
-    colors: {
-        bg: string;
-        primary: string;
-        text: string;
-    };
+  name: string;
+  title: string;
+  description: string;
+  colorTheme: string;
+  layout: 'classic' | 'story' | 'personal-touch' | 'modern-minimal' | 'timeless';
+  colors: {
+    bg: string;
+    primary: string;
+    text: string;
+  };
 }

@@ -1,6 +1,32 @@
 import { Theme } from './types';
 
 export const standardThemes: Theme[] = [
+  // New Themes
+  {
+    name: 'timeless',
+    title: 'Timeless (New Classic)',
+    description: 'An elegant, centered layout with gradient backgrounds and a focus on essential memories.',
+    colorTheme: 'classic-rose', // Fallback color theme if needed
+    layout: 'timeless',
+    colors: { bg: '#F6F6F8', primary: '#135bec', text: '#0d121b' },
+  },
+  {
+    name: 'personal-touch',
+    title: 'Personal Touch',
+    description: 'A warm, scrapbook-style design with handwriting fonts and collage elements.',
+    colorTheme: 'classic-rose',
+    layout: 'personal-touch',
+    colors: { bg: '#F6F6F8', primary: '#135bec', text: '#0d121b' },
+  },
+  {
+    name: 'modern-minimal',
+    title: 'Modern Minimal',
+    description: 'A sleek, split-screen layout with a sticky sidebar and interactive features.',
+    colorTheme: 'modern-blue',
+    layout: 'modern-minimal',
+    colors: { bg: '#FFFFFF', primary: '#f97316', text: '#111827' },
+  },
+
   // Classic Rose
   {
     name: 'classic-rose-classic',

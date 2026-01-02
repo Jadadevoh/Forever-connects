@@ -11,9 +11,10 @@ const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(u
 const STORAGE_KEY = 'site_settings';
 
 const initialSettings: SiteSettings = {
-  siteName: "Forever Connected",
+  siteName: "Remembered Flame",
   logoUrl: '',
   heroImageUrl: '',
+  aboutHeroImageUrl: '',
 };
 
 export const SiteSettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

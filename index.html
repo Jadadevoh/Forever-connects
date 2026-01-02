@@ -38,6 +38,40 @@
       --border-color: #DDE2EB;
     }
 
+    /* Custom utilities for scrapbook theme */
+    .rotate-random-1 {
+      transform: rotate(-1deg);
+    }
+
+    .rotate-random-2 {
+      transform: rotate(2deg);
+    }
+
+    .rotate-random-3 {
+      transform: rotate(-3deg);
+    }
+
+    .paper-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Animation utilities */
+    .animate-fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .theme-classic-rose {
       --bg-color: #FFF5F5;
       --text-color: #5E3737;
@@ -119,12 +153,54 @@
       color: var(--primary-color);
       text-decoration: underline;
     }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
+    }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Manrope:wght@200..800&family=Caveat:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
     rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'pale-sky': 'var(--bg-color, #EDF2F7)',
+            'dusty-blue': 'var(--primary-color, #7B9ACD)',
+            'deep-navy': 'var(--text-color, #1D2D50)',
+            'soft-gray': 'var(--accent-color, #AEB4C2)',
+            'silver': 'var(--border-color, #DDE2EB)',
+            // New theme colors
+            'primary': 'var(--primary-color, #135bec)',
+            'paper-light': 'var(--secondary-color, #ffffff)',
+            'paper-dark': '#1a2230',
+            'background-light': 'var(--bg-color, #f6f6f8)',
+            'background-dark': '#101622',
+          },
+          fontFamily: {
+            'sans': ['Inter', 'sans-serif'],
+            'serif': ['Lora', 'serif'],
+            'display': ['Manrope', 'sans-serif'],
+            'handwriting': ['Caveat', 'cursive'],
+            'playfair': ['Playfair Display', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
   <script type="importmap">
 {
   "imports": {

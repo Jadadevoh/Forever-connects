@@ -122,8 +122,7 @@ const ClassicLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ mem
                 )}
 
                 {/* Donation Section */}
-                {memorial.donationInfo?.isEnabled && (
-                    {/* Donation Section - Compact & Cute */ }
+                {/* Donation Section - Compact & Cute */}
                 {memorial.donationInfo?.isEnabled && (
                     <section className="mt-8 pt-8 border-t border-silver animate-fade-in">
                         <div className="bg-white/60 p-6 rounded-2xl border border-silver shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">

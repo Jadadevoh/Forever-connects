@@ -85,21 +85,25 @@ Select a pairing that matches the emotional tone of the theme:
     - **Links/PDFs** (External memories, documents)
 - **Layout**: Grid-based (`grid-cols-2 md:grid-cols-3`).
 
-## 5. Required Sections
-### Vital Statistics
-- **Standard Fields**: Born, Departed, Resting Place, Cause of Death (conditional).
-- **Dynamic Fields**: The layout must be flexible enough to accept new data points as they are added (e.g., "Survived By", "Education", "Hometown").
+## 5. Required Sections & Content Order (Story Tab)
+All themes must follow this strict vertical order on the "Story" tab to ensure a consistent narrative flow:
 
-### Memoriam Highlights
-- **Position**: Flexible placement—either **Introduction** (Hero area) or **Conclusion** (Below Story).
-- **Flexibility**: Theme authors can choose the best fit, but it should be prominent.
-- **Content**: Must support **multiple** highlights (1-2 minimum).
-    - **Source**: `memorial.aiHighlights` (User or AI generated).
-    - **Visibility**: **Hide** completely if no highlights are present.
-
-### Donation Module
-- **Story Tab**: Display a "Legacy Fund" card or teaser that opens the donation form in a **Popup/Modal**.
-- **Support/Donation Tab**: Display the full **Donation Payment Setup** and **Donor Wall** cleanly.
+1.  **Hero Section**:
+    *   Primary AI Snippet (`memorial.aiHighlights[0]`)
+    *   Profile Image
+    *   Vital Statistics (Born/Passed dates, Location)
+2.  **The Story**:
+    *   Full Biography (`memorial.biography`)
+3.  **Secondary AI Snippet**:
+    *   `memorial.aiHighlights[1]` (if available) as a pull quote or highlighted block.
+4.  **Gallery Preview**:
+    *   A grid or collage of recent photos (3-6 items).
+    *   Must link to the full "Gallery" tab.
+5.  **Tributes List**:
+    *   A list of recent tributes.
+6.  **Donation Module / Icon**:
+    *   The "Legacy Fund" call-to-action or module.
+    *   Must be the final element on the page (or sticky/prominent near the bottom).
 
 ## 6. Interactions
 - **Hover Effects**: `hover:opacity-90`, `hover:-translate-y-1`.

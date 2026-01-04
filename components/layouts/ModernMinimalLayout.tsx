@@ -153,80 +153,52 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                                     )}
                                 </div>
 
+                                {/* Gallery Preview (New Standard) */}
+                                {memorial.gallery && memorial.gallery.length > 0 && (
+                                    <div className="pt-12 border-t border-gray-100">
+                                        <div className="flex justify-between items-center mb-8">
+                                            <h2 className="text-[10px] uppercase tracking-[0.3em] font-black text-gray-300">Recent Photos</h2>
+                                            <button onClick={() => setActiveTab('gallery')} className="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-500 hover:text-indigo-700">View All</button>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {memorial.gallery.slice(0, 4).map((item) => (
+                                                <div key={item.id} className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+                                                    <img src={item.url} alt="Memory" className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Tributes List in Story Tab (Standard Compliance) */}
                                 <div className="pt-12 border-t border-gray-100">
                                     <h2 className="text-[10px] uppercase tracking-[0.3em] font-black text-gray-300 mb-8">Tributes</h2>
                                     <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
                                 </div>
-                            </div>
-                        )}
 
-                        {activeTab === 'gallery' && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
-                                {memorial.gallery.map((item) => (
-                                    <div key={item.id} className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
-                                        <img src={item.url} alt={item.caption || "Memory"} className="w-full h-full object-cover" />
-                                    </div>
-                                ))}
-                                {memorial.gallery.length === 0 && <p className="text-gray-400">No photos shared yet.</p>}
-                            </div>
-                        )}
-
-                        {activeTab === 'tributes' && (
-                            <div className="space-y-12 animate-fade-in">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="font-serif text-4xl font-bold text-gray-900 italic">Tributes</h2>
-                                    <button
-                                        onClick={() => setShowTributeForm(!showTributeForm)}
-                                        className="bg-gray-900 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors"
-                                    >
-                                        {showTributeForm ? 'Cancel' : 'Add Tribute'}
-                                    </button>
-                                </div>
-
-                                {showTributeForm && (
-                                    <div className="bg-gray-50 p-8 rounded-3xl mb-8">
-                                        <TributeForm memorialId={memorial.id} fullName={fullName} onSuccess={() => setShowTributeForm(false)} />
-                                    </div>
+                                {/* Donation Section - Compact & Minimal */}
+                                {memorial.donationInfo?.isEnabled && (
+                                    <section className="pt-8 border-t border-gray-100 animate-fade-in">
+                                        <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-gray-100">
+                                            <div className="flex items-center gap-5">
+                                                <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                                    <span className="material-symbols-outlined text-2xl">favorite</span>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-serif text-xl text-gray-900 italic mb-1">Legacy Fund</h3>
+                                                    <p className="text-sm text-gray-500 max-w-sm">Support the family and honor {memorial.firstName}'s memory.</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setIsDonationModalOpen(true)}
+                                                className="shrink-0 px-8 py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-gray-800 transition-all"
+                                            >
+                                                Contribute
+                                            </button>
+                                        </div>
+                                    </section>
                                 )}
-
-                                <div className="grid gap-8">
-                                    <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
-                                </div>
                             </div>
-                        )}
-
-                        {activeTab === 'events' && (
-                            <div className="text-center py-20 text-gray-400 animate-fade-in">
-                                <span className="material-symbols-outlined text-4xl mb-2">event_busy</span>
-                                <p>No upcoming events scheduled.</p>
-                            </div>
-                        )}
-
-                        {/* Donation Section */}
-                        {/* Donation Section - Compact & Minimal */}
-                        {memorial.donationInfo?.isEnabled && (
-                            <section className="mt-16 pt-8 border-t border-gray-100 animate-fade-in">
-                                <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-gray-100">
-                                    <div className="flex items-center gap-5">
-                                        <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
-                                            <span className="material-symbols-outlined text-2xl">favorite</span>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-serif text-xl text-gray-900 italic mb-1">Legacy Fund</h3>
-                                            <p className="text-sm text-gray-500 max-w-sm">Support the family and honor {memorial.firstName}'s memory.</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsDonationModalOpen(true)}
-                                        className="shrink-0 px-8 py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-gray-800 transition-all"
-                                    >
-                                        Contribute
-                                    </button>
-                                </div>
-                            </section>
-                        )}
-                    </div>
                 </main>
             </div >
         </div >

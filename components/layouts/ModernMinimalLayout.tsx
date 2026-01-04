@@ -227,7 +227,6 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                                 </div>
                             </section>
                         )}
-                        )}
                     </div>
                 </main>
             </div >

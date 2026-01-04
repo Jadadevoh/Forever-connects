@@ -12,7 +12,7 @@ const STORAGE_KEY = 'site_settings';
 
 const initialSettings: SiteSettings = {
   siteName: "Remembered Flame",
-  logoUrl: '',
+  logoUrl: '/logo.png',
   heroImageUrl: '',
   aboutHeroImageUrl: '',
 };

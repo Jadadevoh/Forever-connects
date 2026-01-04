@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { useMemorials } from '../hooks/useMemorials';
 import { Photo, Memorial, GalleryItem, LinkItem, MemorialPlan, MediaItem, MemorialCreationData } from '../types';
-import { generateBiography } from '../services/geminiService';
+import { generateBiography, generateTributeHighlights } from '../services/geminiService';
 import { standardThemes } from '../themes';
 import { COLOR_PALETTES, LAYOUTS, ColorPalette, LayoutOption } from '../constants/themeOptions';
 import PhotoUpload from '../components/PhotoUpload';
@@ -41,7 +41,7 @@ const DEFAULT_PROFILE_IMAGE: Photo = {
 
 
 const ColorSwatch: React.FC<{ palette: ColorPalette, isSelected: boolean, onClick: () => void }> = ({ palette, isSelected, onClick }) => (
-    <div onClick={onClick} className={`cursor-pointer group flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-dusty-blue bg-pale-sky/30' : 'border-transparent hover:bg-gray-50'}`}>
+    <div onClick={onClick} title={palette.description} className={`cursor-pointer group flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-dusty-blue bg-pale-sky/30' : 'border-transparent hover:bg-gray-50'}`}>
         <div className={`w-16 h-16 rounded-full shadow-sm flex items-center justify-center overflow-hidden border ${isSelected ? 'ring-2 ring-offset-2 ring-dusty-blue' : 'ring-1 ring-black/5'}`} style={{ background: `linear-gradient(135deg, ${palette.colors.bg} 0%, ${palette.colors.bg} 50%, ${palette.colors.primary} 50%, ${palette.colors.primary} 100%)` }}>
             <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm"></div>
         </div>
@@ -114,7 +114,7 @@ const CreateMemorialPage: React.FC = () => {
     const [step, setStep] = useState(1);
     const [currentTab, setCurrentTab] = useState(location.state?.defaultTab || 'info');
 
-    const { currentUser, isLoggedIn } = useAuth();
+    const { currentUser, isLoggedIn, isAdmin, loading: authLoading } = useAuth();
     const { saveGuestMemorial, guestMemorialData, clearGuestMemorial } = useGuestMemorial();
     const [formData, setFormData] = useState<MemorialCreationData>({
         firstName: '', middleName: '', lastName: '', birthDate: '', deathDate: '', gender: '', city: '',
@@ -135,6 +135,7 @@ const CreateMemorialPage: React.FC = () => {
     const [personalityTraits, setPersonalityTraits] = useState('');
     const [keyMemories, setKeyMemories] = useState('');
     const [isGeneratingBio, setIsGeneratingBio] = useState(false);
+    const [isGeneratingHighlights, setIsGeneratingHighlights] = useState(false);
 
     const [linkUrl, setLinkUrl] = useState('');
     const [linkTitle, setLinkTitle] = useState('');
@@ -167,9 +168,15 @@ const CreateMemorialPage: React.FC = () => {
     };
 
     useEffect(() => {
+        // Wait for auth to initialize before checking permissions
+        if (authLoading) return;
+
         if (isEditMode && editId) {
             if (memorialToEdit) {
-                if (memorialToEdit.userId !== currentUser?.id) {
+                // Allow owner OR admin
+                if (memorialToEdit.userId !== currentUser?.id && !isAdmin) {
+                    // Only redirect if we are SURE they are not authorized
+                    console.warn("Unauthorized edit attempt", { userId: currentUser?.id, ownerId: memorialToEdit.userId, isAdmin });
                     alert("You are not authorized to edit this memorial.");
                     navigate('/dashboard');
                     return;
@@ -185,11 +192,11 @@ const CreateMemorialPage: React.FC = () => {
                     isCauseOfDeathPrivate: memorialToEdit.isCauseOfDeathPrivate, relationship: '',
                     donations: memorialToEdit.donations || [],
                     profileImage: memorialToEdit.profileImage, biography: memorialToEdit.biography,
-                    gallery: memorialToEdit.gallery, plan: memorialToEdit.plan,
+                    gallery: memorialToEdit.gallery, plan: memorialToEdit.plan || 'free',
                     donationInfo: memorialToEdit.donationInfo || { isEnabled: false, recipient: '', goal: 0, description: '', showDonorWall: true, suggestedAmounts: [25, 50, 100, 250], purpose: 'General Support for the Family' },
                     emailSettings: memorialToEdit.emailSettings || {
                         senderName: `${fullName} Tribute Team`, replyToEmail: currentUser?.email || '',
-                        headerImageUrl: memorialToEdit.profileImage.url, footerMessage: `In loving memory of ${fullName}.`,
+                        headerImageUrl: memorialToEdit.profileImage?.url || '', footerMessage: `In loving memory of ${fullName}.`,
                     },
                     theme: memorialToEdit.theme,
                     layout: memorialToEdit.layout || 'timeless',
@@ -200,6 +207,13 @@ const CreateMemorialPage: React.FC = () => {
                 setCustomSlug(memorialToEdit.slug);
                 setIsSlugManuallyEdited(true);
                 window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+                setIsDataLoaded(true);
+            } else {
+                // Memorial ID passed but not found in context
+                console.error("Memorial not found for editing", editId);
+                // Don't hang on loading, show error or redirect
+                alert(`Memorial not found with ID: ${editId}`);
+                navigate('/dashboard');
             }
         } else {
             // Prioritize data passed via GuestMemorialContext (e.g. from Signup redirect)
@@ -330,6 +344,74 @@ const CreateMemorialPage: React.FC = () => {
         setIsGeneratingBio(false);
     };
 
+    const handleGenerateHighlights = async () => {
+        if (!formData.biography.trim()) {
+            alert("Please provide a biography before generating highlights.");
+            return;
+        }
+
+        if (formData.aiHighlights && formData.aiHighlights.length > 0) {
+            if (!window.confirm("This will regenerate the highlights and replace the current ones. Do you want to continue?")) {
+                return;
+            }
+        }
+
+        setIsGeneratingHighlights(true);
+        try {
+            // Use biography as the primary source for now if tributes are empty in creation flow
+            // In edit mode we might have tributes, but formData might not have them fully loaded in 'tributes' prop unless we fetch them.
+            // However, formData gets 'tributes' from memorialToEdit in useEffect.
+            // But wait, 'tributes' is omitted from MemorialCreationData in the original type definition, so formData doesn't have it directly editable usually.
+            // BUT we added it to formData state initialization.
+            // Let's check formData initialization. It relies on memorialToEdit.
+            // memorialToEdit has tributes.
+            // But MemorialCreationData was just modified to include aiHighlights, but it still omits tributes.
+            // So formData won't have 'tributes' unless we forced it?
+            // Actually, in the useEffect (line 198), we spread memorialToEdit properties, but tributes are NOT in the mapped formDataToSet object explicitly unless we add them.
+            // Line 186: `donations: memorialToEdit.donations || [],`
+            // Tributes were NOT there.
+            // So we should rely on biography for now, or fetch tributes if needed.
+            // Simpler: Use biography.
+
+            const contextText = [formData.biography].filter(Boolean);
+            if (contextText.length === 0) {
+                alert("Please write a biography first so the AI has context to generate highlights.");
+                setIsGeneratingHighlights(false);
+                return;
+            }
+
+            // We are using generateTributeHighlights which expects an array of strings (tributes).
+            // We can pass the biography sentences or paragraphs as "tributes" to extract highlights.
+            const highlights = await generateTributeHighlights(contextText);
+            setFormData(prev => ({ ...prev, aiHighlights: highlights }));
+        } catch (error) {
+            console.error("Failed to generate highlights", error);
+            alert("Failed to generate highlights. Please try again.");
+        } finally {
+            setIsGeneratingHighlights(false);
+        }
+    };
+
+    const handleUpdateHighlight = (index: number, newValue: string) => {
+        setFormData(prev => {
+            const newHighlights = [...(prev.aiHighlights || [])];
+            newHighlights[index] = newValue;
+            return { ...prev, aiHighlights: newHighlights };
+        });
+    };
+
+    const handleDeleteHighlight = (index: number) => {
+        setFormData(prev => {
+            const newHighlights = [...(prev.aiHighlights || [])];
+            newHighlights.splice(index, 1);
+            return { ...prev, aiHighlights: newHighlights };
+        });
+    };
+
+    const handleAddHighlight = () => {
+        setFormData(prev => ({ ...prev, aiHighlights: [...(prev.aiHighlights || []), "New highlight"] }));
+    };
+
     const handleMediaUpload = (items: MediaItem[]) => {
         if (formData.plan === 'free') {
             const currentImages = formData.gallery.filter(item => item.type === 'image').length;
@@ -409,11 +491,7 @@ const CreateMemorialPage: React.FC = () => {
         // Determine the profile image to use (user uploaded OR default)
         const profileImageToUse = formData.profileImage || DEFAULT_PROFILE_IMAGE;
 
-        if (!formData.layout) {
-            alert("Please select a layout for the memorial.");
-            isEditMode ? setCurrentTab('theme') : setStep(6);
-            return;
-        }
+        // Layout defaults to timeless if not set, handled in data preparation below
 
         // Validate custom slug
         if (!customSlug || slugError) {
@@ -422,13 +500,7 @@ const CreateMemorialPage: React.FC = () => {
             return;
         }
 
-        // Warn if gallery is empty but don't block
-        if (formData.gallery.length === 0) {
-            if (!window.confirm("You haven't uploaded any additional photos or media to the gallery. A memorial is richer with photos and videos. Do you want to publish anyway?")) {
-                isEditMode ? setCurrentTab('gallery') : setStep(4);
-                return;
-            }
-        }
+
 
         if (isEditMode && editId) {
             const { relationship, ...dataToSave } = formData;
@@ -575,6 +647,16 @@ const CreateMemorialPage: React.FC = () => {
                 <label htmlFor="profileImage" className={labelStyles}>Profile Image (Optional)</label>
                 <div className="mb-2 text-xs text-soft-gray">You can add this later. If left blank, a default image will be used.</div>
                 <PhotoUpload onPhotosUpload={handleProfileImageUpload} multiple={false} />
+                {formData.profileImage && (
+                    <div className="mt-4 flex items-center gap-4">
+                        <span className="text-sm font-medium text-deep-navy">Selected Image:</span>
+                        <img
+                            src={formData.profileImage.url}
+                            alt="Profile"
+                            className="w-16 h-16 rounded-full object-cover border border-silver shadow-sm"
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -664,6 +746,67 @@ const CreateMemorialPage: React.FC = () => {
             <div>
                 <label htmlFor="biography" className={labelStyles}>Full Biography</label>
                 <RichTextEditor {...bioProps} />
+            </div>
+
+            <div className="bg-pale-sky/60 p-4 rounded-lg border border-silver">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 className="font-semibold text-deep-navy">Memorial Highlights</h4>
+                        <p className="text-sm text-soft-gray">Short, poetic snippets used in themes (e.g. Hero section).</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleGenerateHighlights}
+                        disabled={isGeneratingHighlights || !formData.biography}
+                        className="px-3 py-1.5 bg-dusty-blue/10 text-dusty-blue font-medium rounded-md text-sm hover:bg-dusty-blue/20 disabled:opacity-50 transition-colors"
+                    >
+                        {isGeneratingHighlights ? 'Generating...' : formData.aiHighlights && formData.aiHighlights.length > 0 ? 'Regenerate' : 'Auto-Generate'}
+                    </button>
+                </div>
+
+                {formData.aiHighlights && formData.aiHighlights.length > 0 ? (
+                    <div className="space-y-3">
+                        {formData.aiHighlights.map((highlight, index) => (
+                            <div key={index} className="flex items-start gap-2 group">
+                                <div className="flex-1">
+                                    <textarea
+                                        value={highlight}
+                                        onChange={(e) => handleUpdateHighlight(index, e.target.value)}
+                                        rows={2}
+                                        className={`${inputStyles} bg-white text-sm`}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteHighlight(index)}
+                                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    title="Remove highlight"
+                                >
+                                    <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={handleAddHighlight}
+                            className="text-sm text-dusty-blue font-medium hover:text-deep-navy flex items-center gap-1 mt-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">add</span> Add Custom Highlight
+                        </button>
+                    </div>
+                ) : (
+                    <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-md">
+                        <p className="text-sm text-gray-500 mb-2">No highlights yet.</p>
+                        <button
+                            type="button"
+                            onClick={handleGenerateHighlights}
+                            disabled={isGeneratingHighlights || !formData.biography}
+                            className="text-dusty-blue hover:text-deep-navy font-medium text-sm"
+                        >
+                            Generate from Biography
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -818,7 +961,7 @@ const CreateMemorialPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {formData.donations.sort((a, b) => b.date - a.date).map((donation) => (
+                                {formData.donations && [...formData.donations].sort((a, b) => b.date - a.date).map((donation) => (
                                     <tr key={donation.id}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {new Date(donation.date).toLocaleDateString()}

@@ -38,7 +38,7 @@ const MemorialPage: React.FC = () => {
     const [isEditUrlModalOpen, setIsEditUrlModalOpen] = useState(false);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
-    const isOwner = currentUser && memorial && currentUser.id === memorial.userId;
+    const isOwner = currentUser && memorial && (currentUser.id === memorial.userId || currentUser.role === 'admin');
 
     if (!memorial || memorial.status !== 'active') { return <div className="text-center text-xl text-soft-gray p-12">Memorial not found or is not public.</div>; }
 

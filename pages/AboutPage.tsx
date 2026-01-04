@@ -93,6 +93,13 @@ const AboutPage: React.FC = () => {
             </Link>
           </div>
 
+          {/* Closing Quote */}
+          <div className="mt-16 text-center border-t border-silver pt-8">
+            <p className="text-xl sm:text-2xl font-serif italic text-dusty-blue">
+              "Because a life this beautiful should never be forgotten."
+            </p>
+          </div>
+
         </div>
       </div>
     </div>

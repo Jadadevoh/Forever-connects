@@ -235,6 +235,59 @@ const DashboardPage: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* Admin Tools Section */}
+      {currentUser?.role === 'admin' && (
+        <section className="mt-12 mb-12 p-6 bg-slate-800 text-white rounded-xl">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined">admin_panel_settings</span>
+            Admin Tools
+          </h2>
+          <div className="bg-slate-700 p-4 rounded-lg">
+            <h3 className="font-bold mb-2">Claim Memorial</h3>
+            <p className="text-sm text-slate-300 mb-4">Transfer ownership of a specific memorial to your account for testing.</p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  // Hardcoded Sample for now, or prompted
+                  const id = prompt("Enter Memorial ID to claim:");
+                  if (id) {
+                    // Check if valid
+                    const mem = memorials.find(m => m.id === id);
+                    if (mem) {
+                      updateMemorial(id, { userId: currentUser.id });
+                      alert(`Successfully claimed memorial: ${mem.firstName} ${mem.lastName}`);
+                    } else {
+                      alert("Memorial ID not found.");
+                    }
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-bold"
+              >
+                Claim by ID
+              </button>
+
+              <button
+                onClick={() => {
+                  // Find any Personal Touch memorial
+                  const target = memorials.find(m => m.theme === 'personal-touch' || m.layout === 'personal-touch');
+                  if (target) {
+                    if (confirm(`Found 'Personal Touch' memorial: ${target.firstName} ${target.lastName}. Claim it?`)) {
+                      updateMemorial(target.id, { userId: currentUser.id });
+                      alert("Claimed!");
+                    }
+                  } else {
+                    alert("No 'personal-touch' memorial found.");
+                  }
+                }}
+                className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded font-bold"
+              >
+                Find & Claim 'Personal Touch'
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

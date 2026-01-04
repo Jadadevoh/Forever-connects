@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Memorial } from '../../types';
 import DonationModule from '../DonationModule';
+import TributeList from '../TributeList';
 
 interface TimelessLayoutProps {
     memorial: Memorial;
@@ -65,7 +66,7 @@ const TimelessLayout: React.FC<TimelessLayoutProps> = ({ memorial, fullName }) =
             </div>
 
             {/* Main Content Grid */}
-            <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-x-10 gap-y-12 items-start pb-20">
+            <div className={`w-full max-w-[1200px] mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 gap-x-10 gap-y-12 items-start pb-20 ${activeTab === 'support' ? 'lg:grid-cols-[1fr_3fr]' : 'lg:grid-cols-[1fr_2fr_1fr]'}`}>
 
                 {/* Left Column (Sticky Details) */}
                 <div className="flex flex-col gap-8 lg:sticky lg:top-[9rem]">
@@ -133,6 +134,12 @@ const TimelessLayout: React.FC<TimelessLayoutProps> = ({ memorial, fullName }) =
                                     "{memorial.aiHighlights[1]}"
                                 </blockquote>
                             )}
+
+                            {/* Tributes List in Story Tab (Standard Compliance) */}
+                            <div className="mt-12 pt-8 border-t border-silver dark:border-gray-700">
+                                <h3 className="text-xl font-bold text-deep-navy dark:text-white mb-6">Tributes</h3>
+                                <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
+                            </div>
                         </div>
                     )}
 
@@ -148,13 +155,7 @@ const TimelessLayout: React.FC<TimelessLayoutProps> = ({ memorial, fullName }) =
 
                     {activeTab === 'tributes' && (
                         <div className="space-y-6">
-                            {memorial.tributes.map(tribute => (
-                                <div key={tribute.id} className="bg-white p-6 rounded-xl border border-silver">
-                                    <p className="italic text-gray-600 mb-4">"{tribute.content}"</p>
-                                    <p className="font-bold text-sm text-deep-navy">- {tribute.author}</p>
-                                </div>
-                            ))}
-                            {memorial.tributes.length === 0 && <p className="text-center text-gray-500">No tributes yet.</p>}
+                            <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
                         </div>
                     )}
 
@@ -168,48 +169,50 @@ const TimelessLayout: React.FC<TimelessLayoutProps> = ({ memorial, fullName }) =
                     {activeTab === 'support' && memorial.donationInfo?.isEnabled && (
                         <div className="py-8">
                             <h3 className="text-2xl font-bold text-deep-navy dark:text-white mb-6 text-center">Support the Family</h3>
-                            <div className="max-w-xl mx-auto">
+                            <div className="max-w-4xl mx-auto">
                                 <DonationModule memorial={memorial} />
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Right Column (Recent Photos / Donate) */}
-                <div className="flex flex-col gap-8 lg:sticky lg:top-[9rem]">
-                    {/* Recent Photos Widget */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-silver dark:border-gray-700">
-                        <div className="flex justify-between items-center mb-4 border-b border-silver dark:border-gray-700 pb-2">
-                            <h4 className="text-lg font-bold text-deep-navy dark:text-white">Recent Photos</h4>
-                            {memorial.gallery.length > 0 && <button onClick={() => setActiveTab('gallery')} className="text-primary text-sm font-bold hover:underline">View All</button>}
+                {/* Right Column (Recent Photos / Donate) - Hidden on Support Tab */}
+                {activeTab !== 'support' && (
+                    <div className="flex flex-col gap-8 lg:sticky lg:top-[9rem]">
+                        {/* Recent Photos Widget */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-silver dark:border-gray-700">
+                            <div className="flex justify-between items-center mb-4 border-b border-silver dark:border-gray-700 pb-2">
+                                <h4 className="text-lg font-bold text-deep-navy dark:text-white">Recent Photos</h4>
+                                {memorial.gallery.length > 0 && <button onClick={() => setActiveTab('gallery')} className="text-primary text-sm font-bold hover:underline">View All</button>}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {memorial.gallery.slice(0, 4).map(item => (
+                                    <div key={'widget-' + item.id} className="aspect-square rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                        <img src={item.url} className="w-full h-full object-cover" alt="Recent" />
+                                    </div>
+                                ))}
+                                {memorial.gallery.length === 0 && <p className="text-xs text-gray-500 col-span-2">No photos available</p>}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            {memorial.gallery.slice(0, 4).map(item => (
-                                <div key={'widget-' + item.id} className="aspect-square rounded-lg bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                    <img src={item.url} className="w-full h-full object-cover" alt="Recent" />
-                                </div>
-                            ))}
-                            {memorial.gallery.length === 0 && <p className="text-xs text-gray-500 col-span-2">No photos available</p>}
-                        </div>
-                    </div>
 
-                    {/* Donation Widget */}
-                    {memorial.donationInfo?.isEnabled && (
-                        <div className="bg-gradient-to-br from-primary to-deep-navy rounded-xl p-6 text-white shadow-lg text-center">
-                            <span className="material-symbols-outlined text-4xl mb-2">volunteer_activism</span>
-                            <h4 className="text-lg font-bold mb-2">Support the Family</h4>
-                            <p className="text-blue-100 text-sm mb-4">
-                                {memorial.donationInfo.description || "The family appreciates your support during this time."}
-                            </p>
-                            <button
-                                onClick={() => setActiveTab('support')}
-                                className="w-full py-2.5 bg-white text-primary font-bold rounded-full text-sm hover:bg-blue-50 transition-colors"
-                            >
-                                Donate Now
-                            </button>
-                        </div>
-                    )}
-                </div>
+                        {/* Donation Widget */}
+                        {memorial.donationInfo?.isEnabled && (
+                            <div className="bg-gradient-to-br from-primary to-deep-navy rounded-xl p-6 text-white shadow-lg text-center">
+                                <span className="material-symbols-outlined text-4xl mb-2">volunteer_activism</span>
+                                <h4 className="text-lg font-bold mb-2">Support the Family</h4>
+                                <p className="text-blue-100 text-sm mb-4">
+                                    {memorial.donationInfo.description || "The family appreciates your support during this time."}
+                                </p>
+                                <button
+                                    onClick={() => setActiveTab('support')}
+                                    className="w-full py-2.5 bg-white text-primary font-bold rounded-full text-sm hover:bg-blue-50 transition-colors"
+                                >
+                                    Donate Now
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
             </div>
         </div>

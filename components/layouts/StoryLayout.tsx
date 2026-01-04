@@ -31,6 +31,11 @@ const StoryLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ memor
                 </div>
                 <div className="md:col-span-2">
                     <h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Life Story</h2>
+                    {memorial.aiHighlights && memorial.aiHighlights.length > 0 && (
+                        <blockquote className="mb-6 pl-4 border-l-4 border-deep-navy/20 italic text-lg text-deep-navy/80 font-serif">
+                            "{memorial.aiHighlights[0]}"
+                        </blockquote>
+                    )}
                     <div className="prose-styles text-base md:text-lg text-deep-navy/90 leading-relaxed" dangerouslySetInnerHTML={{ __html: memorial.biography }} />
                 </div>
             </section>

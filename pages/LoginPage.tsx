@@ -44,6 +44,10 @@ const LoginPage: React.FC = () => {
       const loggedInUser = await loginFn();
       handlePostLogin(loggedInUser);
     } catch (err: any) {
+      console.error("Login Error Details:", err);
+      // Log specific properties that might not show in a simple stringify
+      if (err.code) console.error("Error Code:", err.code);
+      if (err.message) console.error("Error Message:", err.message);
       setError(getFriendlyErrorMessage(err));
     }
   };

@@ -19,6 +19,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import DonationTermsPage from './pages/DonationTermsPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 import StripeAgreementPage from './pages/StripeAgreementPage';
 import { MemorialsProvider } from './hooks/useMemorials';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -69,7 +70,7 @@ const Header: React.FC = () => {
 
         {/* Center: Nav Links (Desktop) */}
         <div className="hidden lg:flex items-center space-x-4 sm:space-x-6 flex-grow justify-center">
-          {['/', '/about', '/contact', '/pricing'].map((path) => (
+          {['/', '/about', '/pricing', '/contact'].map((path) => (
             <Link
               key={path}
               to={path}
@@ -123,7 +124,12 @@ const Header: React.FC = () => {
 
         {/* Hamburger Button (Mobile) */}
         <div className="lg:hidden flex items-center">
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-deep-navy p-2 -mr-2">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-deep-navy p-2 -mr-2"
+            aria-label="Open main menu"
+            aria-expanded={isMobileMenuOpen}
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
         </div>
@@ -136,14 +142,18 @@ const Header: React.FC = () => {
 
         {/* Menu */}
         <div className={`absolute top-0 right-0 h-full w-64 bg-white shadow-lg p-5 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-deep-navy p-2">
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 text-deep-navy p-2"
+            aria-label="Close menu"
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
           <nav className="mt-12 space-y-2">
             <Link to="/" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Home</Link>
             <Link to="/about" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">About</Link>
-            <Link to="/contact" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Contact</Link>
             <Link to="/pricing" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Pricing</Link>
+            <Link to="/contact" className="block py-2 px-3 text-lg text-deep-navy hover:bg-pale-sky rounded-md">Contact</Link>
 
             <div className="border-t border-silver my-4 pt-4 space-y-2">
               {isLoggedIn ? (
@@ -202,6 +212,7 @@ const AppContent: React.FC = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/donation-terms" element={<DonationTermsPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
           <Route path="/stripe-agreement" element={<StripeAgreementPage />} />
         </Routes>
       </main>
@@ -210,6 +221,7 @@ const AppContent: React.FC = () => {
           <Link to="/privacy-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Privacy Policy</Link>
           <Link to="/donation-terms" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Donation Terms</Link>
           <Link to="/refund-policy" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Refund Policy</Link>
+          <Link to="/terms-and-conditions" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Terms and Conditions</Link>
           <Link to="/stripe-agreement" className="text-sm text-soft-gray hover:text-deep-navy transition-colors">Stripe Agreement</Link>
         </nav>
       </footer>

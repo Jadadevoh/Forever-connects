@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const PrivacyPolicyPage: React.FC = () => {
@@ -63,7 +64,7 @@ const PrivacyPolicyPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">6. Contact Us</h2>
           <p>
-            If you have any questions about this privacy policy or our privacy practices, please contact us through our <a href="#/contact" className="text-dusty-blue hover:underline">Contact Page</a>.
+            If you have any questions about this privacy policy or our privacy practices, please contact us through our <Link to="/contact?subject=Privacy%20Page" className="text-dusty-blue hover:underline">Contact Page</Link>.
           </p>
         </section>
       </div>

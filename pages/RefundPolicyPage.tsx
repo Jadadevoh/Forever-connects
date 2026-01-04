@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const RefundPolicyPage: React.FC = () => {
@@ -27,7 +28,7 @@ const RefundPolicyPage: React.FC = () => {
             To request a refund review, you must contact us within 48 hours of the transaction and provide sufficient evidence of the error or unauthorized use. We will investigate the claim and, if it is validated, we will process a refund for the affected amount.
           </p>
         </section>
-        
+
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">3. Subscription Plans</h2>
           <p>
@@ -38,7 +39,7 @@ const RefundPolicyPage: React.FC = () => {
         <section>
           <h2 className="text-2xl font-serif text-deep-navy mb-2">4. Contact Us</h2>
           <p>
-            For any questions about our refund policy or to report an issue with a transaction, please visit our <a href="#/contact" className="text-dusty-blue hover:underline">Contact Page</a>.
+            For any questions about our refund policy or to report an issue with a transaction, please visit our <Link to="/contact?subject=Refund%20Policy" className="text-dusty-blue hover:underline">Contact Page</Link>.
           </p>
         </section>
       </div>

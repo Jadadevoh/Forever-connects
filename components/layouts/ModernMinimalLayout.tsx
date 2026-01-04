@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Memorial } from '../../types';
 import DonationModule from '../DonationModule';
 import TributeForm from '../TributeForm';
+import TributeList from '../TributeList';
 
 interface ModernMinimalLayoutProps {
     memorial: Memorial;
@@ -141,7 +142,7 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                                     </div>
                                     <div>
                                         <h4 className="text-[9px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-2">Resting</h4>
-                                        <p className="font-medium text-gray-900">{memorial.city}</p>
+                                        <p className="font-medium text-gray-900">{memorial.restingPlace || 'Private'}</p>
                                     </div>
                                     {/* Cause of Death - Only shown if not private and exists */}
                                     {!memorial.isCauseOfDeathPrivate && memorial.causeOfDeath && memorial.causeOfDeath.length > 0 && (
@@ -150,6 +151,12 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                                             <p className="font-medium text-gray-900">{memorial.causeOfDeath.join(', ')}</p>
                                         </div>
                                     )}
+                                </div>
+
+                                {/* Tributes List in Story Tab (Standard Compliance) */}
+                                <div className="pt-12 border-t border-gray-100">
+                                    <h2 className="text-[10px] uppercase tracking-[0.3em] font-black text-gray-300 mb-8">Tributes</h2>
+                                    <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
                                 </div>
                             </div>
                         )}
@@ -184,21 +191,7 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                                 )}
 
                                 <div className="grid gap-8">
-                                    {memorial.tributes.map((tribute) => (
-                                        <div key={tribute.id} className="group relative p-10 bg-white border border-gray-100 rounded-[32px] hover:shadow-2xl hover:shadow-gray-100 transition-all duration-500">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
-                                                    {tribute.author.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm tracking-tight text-gray-900">{tribute.author}</h4>
-                                                    <p className="text-[10px] uppercase tracking-widest text-gray-400">{formatDate(tribute.date)}</p>
-                                                </div>
-                                            </div>
-                                            <p className="font-sans text-lg text-gray-600 leading-relaxed italic">"{tribute.content}"</p>
-                                        </div>
-                                    ))}
-                                    {memorial.tributes.length === 0 && !showTributeForm && <p className="text-gray-400">No tributes yet. Be the first to share.</p>}
+                                    <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
                                 </div>
                             </div>
                         )}
@@ -212,22 +205,28 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
 
                         {/* Donation Section */}
                         {memorial.donationInfo?.isEnabled && (
-                            <section className="mt-24 pt-12 border-t border-gray-100 animate-fade-in">
-                                <div className="bg-gradient-to-br from-primary to-deep-navy rounded-[32px] p-10 md:p-16 text-white text-center relative overflow-hidden mb-12">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                                    <div className="relative z-10">
-                                        <span className="material-symbols-outlined text-5xl mb-6">volunteer_activism</span>
-                                        <h3 className="font-serif text-3xl mb-4 italic">The Legacy Fund</h3>
-                                        <p className="opacity-90 max-w-lg mx-auto mb-8 text-lg">{memorial.donationInfo.description}</p>
-                                        <button
-                                            onClick={() => setIsDonationModalOpen(true)}
-                                            className="bg-white text-deep-navy px-10 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-gray-50 transition-colors shadow-lg"
-                                        >
-                                            Donate Now
-                                        </button>
+                            {/* Donation Section - Compact & Minimal */ }
+                        {memorial.donationInfo?.isEnabled && (
+                            <section className="mt-16 pt-8 border-t border-gray-100 animate-fade-in">
+                                <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-gray-100">
+                                    <div className="flex items-center gap-5">
+                                        <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                            <span className="material-symbols-outlined text-2xl">favorite</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-serif text-xl text-gray-900 italic mb-1">Legacy Fund</h3>
+                                            <p className="text-sm text-gray-500 max-w-sm">Support the family and honor {memorial.firstName}'s memory.</p>
+                                        </div>
                                     </div>
+                                    <button
+                                        onClick={() => setIsDonationModalOpen(true)}
+                                        className="shrink-0 px-8 py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-gray-800 transition-all"
+                                    >
+                                        Contribute
+                                    </button>
                                 </div>
                             </section>
+                        )}
                         )}
                     </div>
                 </main>

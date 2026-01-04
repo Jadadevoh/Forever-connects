@@ -20,10 +20,18 @@
             'deep-navy': 'var(--text-color, #1D2D50)',
             'soft-gray': 'var(--accent-color, #AEB4C2)',
             'silver': 'var(--border-color, #DDE2EB)',
+            // Layout-specific aliases
+            'primary': 'var(--primary-color, #7B9ACD)',
+            'background-light': 'var(--bg-color, #F6F6F8)',
+            'background-dark': '#101622',
+            'paper-light': '#FFFFFF',
+            'paper-dark': '#1A2230',
           },
           fontFamily: {
             'sans': ['Inter', 'sans-serif'],
             'serif': ['Lora', 'serif'],
+            'handwriting': ['Caveat', 'cursive'],
+            'display': ['Playfair Display', 'serif'],
           }
         }
       }
@@ -172,35 +180,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Manrope:wght@200..800&family=Caveat:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
     rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            'pale-sky': 'var(--bg-color, #EDF2F7)',
-            'dusty-blue': 'var(--primary-color, #7B9ACD)',
-            'deep-navy': 'var(--text-color, #1D2D50)',
-            'soft-gray': 'var(--accent-color, #AEB4C2)',
-            'silver': 'var(--border-color, #DDE2EB)',
-            // New theme colors
-            'primary': 'var(--primary-color, #135bec)',
-            'paper-light': 'var(--secondary-color, #ffffff)',
-            'paper-dark': '#1a2230',
-            'background-light': 'var(--bg-color, #f6f6f8)',
-            'background-dark': '#101622',
-          },
-          fontFamily: {
-            'sans': ['Inter', 'sans-serif'],
-            'serif': ['Lora', 'serif'],
-            'display': ['Manrope', 'sans-serif'],
-            'handwriting': ['Caveat', 'cursive'],
-            'playfair': ['Playfair Display', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
+
   <script type="importmap">
 {
   "imports": {

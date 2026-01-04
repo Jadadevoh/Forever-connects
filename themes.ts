@@ -26,6 +26,22 @@ export const standardThemes: Theme[] = [
     layout: 'modern-minimal',
     colors: { bg: '#FFFFFF', primary: '#f97316', text: '#111827' },
   },
+  {
+    name: 'serenity',
+    title: 'Serenity',
+    description: 'A peaceful, split-screen layout designed for storytelling and reflection.',
+    colorTheme: 'modern-blue',
+    layout: 'serenity',
+    colors: { bg: '#F8FAFC', primary: '#475569', text: '#1e293b' },
+  },
+  {
+    name: 'ultra-minimal',
+    title: 'Ultra Minimal',
+    description: 'A striking, artistic layout with large typography and bold visual elements.',
+    colorTheme: 'modern-blue',
+    layout: 'ultra-minimal',
+    colors: { bg: '#FFFFFF', primary: '#000000', text: '#000000' },
+  },
 
   // Classic Rose
   {

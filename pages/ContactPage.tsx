@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useApiSettings } from '../hooks/useApiSettings';
 import { sendContactFormNotification } from '../services/emailService';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
 
 const ContactPage: React.FC = () => {
+  const location = useLocation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { apiSettings } = useApiSettings();
   const { siteSettings } = useSiteSettings();
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const subj = searchParams.get('subject');
+    if (subj) {
+      setSubject(subj);
+    }
+  }, [location]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real application, you would handle the form submission here (e.g., save to a database).
-    sendContactFormNotification({ name, email, message }, apiSettings, siteSettings.siteName);
+    sendContactFormNotification({ name, email, message, subject }, apiSettings, siteSettings.siteName);
     setSubmitted(true);
   };
 
@@ -56,6 +67,18 @@ const ContactPage: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className={inputStyles}
+            />
+          </div>
+          <div>
+            <label htmlFor="subject" className={labelStyles}>Subject</label>
+            <input
+              type="text"
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+              className={inputStyles}
+              placeholder="How can we help?"
             />
           </div>
           <div>

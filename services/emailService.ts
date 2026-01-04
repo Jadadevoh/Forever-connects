@@ -11,18 +11,18 @@ const sendEmail = (to: string, subject: string, body: string, settings: ApiSetti
   if (isSmtpConfigured(settings)) {
     let finalBody = body;
     let fromInfo = `${settings.smtpUser} (via ${settings.smtpHost}:${settings.smtpPort})`;
-    
+
     if (memorialEmailSettings) {
       // Wrap body with header and footer
       if (memorialEmailSettings.headerImageUrl) {
-          finalBody = `<div style="text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;"><img src="${memorialEmailSettings.headerImageUrl}" alt="Logo" style="max-width: 200px; max-height: 100px; object-fit: contain;"></div>` + finalBody;
+        finalBody = `<div style="text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;"><img src="${memorialEmailSettings.headerImageUrl}" alt="Logo" style="max-width: 200px; max-height: 100px; object-fit: contain;"></div>` + finalBody;
       }
       if (memorialEmailSettings.footerMessage) {
-          finalBody = finalBody + `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #777; text-align: center;">${memorialEmailSettings.footerMessage.replace(/\n/g, '<br>')}</div>`;
+        finalBody = finalBody + `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #777; text-align: center;">${memorialEmailSettings.footerMessage.replace(/\n/g, '<br>')}</div>`;
       }
       // Set custom From/Reply-To
       if (memorialEmailSettings.senderName && memorialEmailSettings.replyToEmail) {
-          fromInfo = `${memorialEmailSettings.senderName} <${settings.smtpUser}> (Reply-To: ${memorialEmailSettings.replyToEmail})`;
+        fromInfo = `${memorialEmailSettings.senderName} <${settings.smtpUser}> (Reply-To: ${memorialEmailSettings.replyToEmail})`;
       }
     }
 
@@ -59,9 +59,9 @@ export const sendWelcomeEmail = (user: User, settings: ApiSettings, siteName: st
 
 // Password reset email
 export const sendPasswordResetEmail = (email: string, settings: ApiSettings, siteName: string) => {
-    const resetLink = `${window.location.origin}${window.location.pathname}#/reset-password?token=${Date.now()}`; // Simulated token
-    const subject = `Reset Your Password for ${siteName}`;
-    const body = `
+  const resetLink = `${window.location.origin}${window.location.pathname}#/reset-password?token=${Date.now()}`; // Simulated token
+  const subject = `Reset Your Password for ${siteName}`;
+  const body = `
 <p>Hello,</p>
 <p>You requested a password reset. Please click the link below to set a new password:</p>
 <p><a href="${resetLink}">Reset Your Password</a></p>
@@ -74,8 +74,8 @@ export const sendPasswordResetEmail = (email: string, settings: ApiSettings, sit
 
 // Failed payment reminder (placeholder for webhook-driven logic)
 export const sendFailedPaymentNotification = (user: User, settings: ApiSettings, siteName: string) => {
-    const subject = `Action Required: Your payment for ${siteName} failed`;
-    const body = `
+  const subject = `Action Required: Your payment for ${siteName} failed`;
+  const body = `
 <p>Dear ${user.name},</p>
 <p>We were unable to process the payment for your plan. To keep your premium features active, please update your billing information.</p>
 <p>[Link to Billing Page]</p>
@@ -83,14 +83,14 @@ export const sendFailedPaymentNotification = (user: User, settings: ApiSettings,
 <br>
 <p>Sincerely,<br>The ${siteName} Team</p>
   `;
-    sendEmail(user.email, subject, body, settings);
+  sendEmail(user.email, subject, body, settings);
 };
 
 // Donation Receipt to Donor
 export const sendDonationReceipt = (donorEmail: string, donation: Donation, memorial: Memorial, settings: ApiSettings, siteName: string) => {
-    const memorialName = `${memorial.firstName} ${memorial.lastName}`;
-    const subject = `Thank you for your donation to the memorial of ${memorialName}`;
-    const body = `
+  const memorialName = `${memorial.firstName} ${memorial.lastName}`;
+  const subject = `Thank you for your donation to the memorial of ${memorialName}`;
+  const body = `
 <p>Dear ${donation.isAnonymous ? 'Donor' : donation.name},</p>
 <p>Thank you for your generous donation of <strong>$${donation.amount.toFixed(2)}</strong>. Your contribution helps preserve the memorial of ${memorialName} and support their family.</p>
 <p>${!donation.isAnonymous && donation.message ? `Your message: <blockquote>"${donation.message}"</blockquote>` : ''}</p>
@@ -103,9 +103,9 @@ export const sendDonationReceipt = (donorEmail: string, donation: Donation, memo
 
 // Donation Notification to Memorial Owner
 export const sendDonationNotification = (donation: Donation, memorial: Memorial, owner: User, settings: ApiSettings, siteName: string) => {
-    const memorialName = `${memorial.firstName} ${memorial.lastName}`;
-    const subject = `You have received a new donation for ${memorialName}`;
-    const body = `
+  const memorialName = `${memorial.firstName} ${memorial.lastName}`;
+  const subject = `You have received a new donation for ${memorialName}`;
+  const body = `
 <p>Dear ${owner.name},</p>
 <p>You have received a new donation for the memorial of ${memorialName}.</p>
 <p><strong>From:</strong> ${donation.name}</p>
@@ -131,7 +131,7 @@ export const sendNewTributeNotification = (
 ) => {
   const memorialName = `${memorial.firstName} ${memorial.lastName}`;
   const memorialUrl = `${window.location.origin}${window.location.pathname}#/memorial/${memorial.slug}`;
-  
+
   const subject = `New Tribute for ${memorialName}`;
   const body = `
 <p>Dear ${owner.name},</p>
@@ -164,12 +164,15 @@ export const sendPlanUpgradeNotification = (user: User, newPlan: MemorialPlan, s
 
 // Specific notification for contact form submissions
 export const sendContactFormNotification = (
-  formData: { name: string; email: string; message: string },
+  formData: { name: string; email: string; message: string; subject?: string },
   settings: ApiSettings,
   siteName: string
 ) => {
   const adminEmail = settings.smtpUser || 'admin@example.com'; // Send to admin
-  const subject = `New Contact Form Submission from ${formData.name} - ${siteName}`;
+  const baseSubject = `New Contact Form Submission from ${formData.name}`;
+  const subject = formData.subject
+    ? `${formData.subject} - ${baseSubject} - ${siteName}`
+    : `${baseSubject} - ${siteName}`;
   const body = `
 <p>You have received a new message from the website contact form.</p>
 <p><strong>Name:</strong> ${formData.name}</p>

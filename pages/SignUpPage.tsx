@@ -53,6 +53,9 @@ const SignUpPage: React.FC = () => {
       handlePostLogin(newUser);
 
     } catch (err: any) {
+      console.error("Signup Error Details:", err);
+      if (err.code) console.error("Error Code:", err.code);
+      if (err.message) console.error("Error Message:", err.message);
       setError(getFriendlyErrorMessage(err));
     }
   };

@@ -132,8 +132,8 @@ const DonationFormUI: React.FC<DonationFormUIProps> = ({ memorial, isProcessing,
 
                     {/* Donor Info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required className="w-full rounded-md bg-white border-silver" />
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your Email (for receipt)" required className="w-full rounded-md bg-white border-silver" />
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required className="w-full rounded-md bg-white border border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue sm:text-sm text-deep-navy px-3 py-2" />
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your Email (for receipt)" required className="w-full rounded-md bg-white border border-silver shadow-sm focus:border-dusty-blue focus:ring-dusty-blue sm:text-sm text-deep-navy px-3 py-2" />
                     </div>
                     <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} placeholder="Leave a short message (optional)" className="w-full rounded-md bg-white border-silver" />
 

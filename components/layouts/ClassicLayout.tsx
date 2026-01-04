@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Memorial } from '../../types';
 import { renderGalleryItem } from '../GalleryHelpers';
 import DonationModule from '../DonationModule';
+import TributeList from '../TributeList';
 
 const getAge = (birthDate: string, deathDate: string): number => {
     const start = new Date(birthDate);
@@ -56,8 +57,38 @@ const ClassicLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ mem
             <div className="bg-pale-sky/50 rounded-lg p-8 border border-silver min-h-[400px]">
                 {activeTab === 'story' && (
                     <section className="animate-fade-in">
+                        {memorial.aiHighlights && memorial.aiHighlights.length > 0 && (
+                            <div className="mb-8 p-6 bg-paper-light border-l-4 border-deep-navy/30 italic text-deep-navy/80 text-lg font-serif rounded-r-lg">
+                                "{memorial.aiHighlights[0]}"
+                            </div>
+                        )}
                         <h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Life Story</h2>
                         <div className="prose-styles text-base md:text-lg text-deep-navy/90 leading-relaxed" dangerouslySetInnerHTML={{ __html: memorial.biography }} />
+
+
+
+                        {/* Recent Photos Preview (Standardized) */}
+                        {memorial.gallery.length > 0 && (
+                            <div className="mt-12 pt-8 border-t border-silver">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-2xl font-serif text-deep-navy">Recent Photos</h3>
+                                    <button onClick={() => setActiveTab('gallery')} className="text-deep-navy font-bold text-sm uppercase tracking-wider hover:underline">View All</button>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {memorial.gallery.slice(0, 4).map(item => (
+                                        <div key={item.id} className="aspect-square bg-gray-100 border border-silver p-1 shadow-sm">
+                                            {renderGalleryItem(item)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tributes List in Story Tab (Standard Compliance) */}
+                        <div className="mt-12 pt-8 border-t border-silver">
+                            <h3 className="text-2xl font-serif text-deep-navy mb-6">Tributes</h3>
+                            <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
+                        </div>
                     </section>
                 )}
 
@@ -78,16 +109,7 @@ const ClassicLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ mem
                     <section className="animate-fade-in">
                         <h2 className="text-3xl font-serif text-deep-navy mb-4 border-b border-silver pb-2">Tributes</h2>
                         <div className="space-y-6">
-                            {memorial.tributes.map(tribute => (
-                                <div key={tribute.id} className="bg-white p-6 rounded-xl border border-silver shadow-sm">
-                                    <p className="italic text-gray-600 mb-4 font-serif">"{tribute.content}"</p>
-                                    <div className="flex justify-between items-center">
-                                        <p className="font-bold text-sm text-deep-navy">- {tribute.author}</p>
-                                        <p className="text-xs text-soft-gray">{new Date(tribute.date).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-                            ))}
-                            {memorial.tributes.length === 0 && <p className="text-center text-gray-500 py-10">No tributes yet.</p>}
+                            <TributeList tributes={memorial.tributes} memorialId={memorial.id} />
                         </div>
                     </section>
                 )}
@@ -101,23 +123,28 @@ const ClassicLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ mem
 
                 {/* Donation Section */}
                 {memorial.donationInfo?.isEnabled && (
-                    <section className="mt-10 pt-10 border-t border-silver text-center animate-fade-in">
-                        <div className="max-w-2xl mx-auto bg-white/50 p-8 rounded-xl border border-silver shadow-sm">
-                            <span className="material-symbols-outlined text-4xl text-primary mb-4">volunteer_activism</span>
-                            <h3 className="text-2xl font-serif text-deep-navy mb-2">The Legacy Fund</h3>
-                            <p className="text-soft-gray mb-6">{memorial.donationInfo.description}</p>
-                            <div className="w-full bg-silver/30 rounded-full h-3 mb-6 overflow-hidden">
-                                <div className="bg-primary h-full rounded-full" style={{ width: '0%' }}></div>
+                    {/* Donation Section - Compact & Cute */ }
+                {memorial.donationInfo?.isEnabled && (
+                    <section className="mt-8 pt-8 border-t border-silver animate-fade-in">
+                        <div className="bg-white/60 p-6 rounded-2xl border border-silver shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-4 text-center sm:text-left">
+                                <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <span className="material-symbols-outlined text-2xl">volunteer_activism</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-serif text-deep-navy">The Legacy Fund</h3>
+                                    <p className="text-sm text-soft-gray max-w-sm">Honoring {memorial.firstName} with a contribution.</p>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-soft-gray mb-8">
-                                <span>$0 Raised</span>
-                                <span>Goal ${memorial.donationInfo.goal}</span>
-                            </div>
-                            <button onClick={() => setActiveTab('support' as any)} className="bg-primary text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition-opacity shadow-md">
-                                Donate Now
+                            <button
+                                onClick={() => setActiveTab('support' as any)}
+                                className="px-6 py-2.5 bg-primary text-white text-sm font-bold uppercase tracking-wider rounded-full hover:opacity-90 transition-all shadow-md whitespace-nowrap"
+                            >
+                                Donate
                             </button>
                         </div>
                     </section>
+                )}
                 )}
 
                 {activeTab === 'support' && memorial.donationInfo?.isEnabled && (

@@ -122,7 +122,7 @@ export interface Memorial {
   createdAt: number;
 }
 
-export interface MemorialCreationData extends Omit<Memorial, 'id' | 'userId' | 'slug' | 'status' | 'tributes' | 'followers' | 'aiHighlights' | 'profileImage' | 'createdAt'> {
+export interface MemorialCreationData extends Omit<Memorial, 'id' | 'userId' | 'slug' | 'status' | 'tributes' | 'followers' | 'profileImage' | 'createdAt'> {
   relationship: string;
   profileImage: Photo | null;
   layout?: string;
@@ -134,7 +134,7 @@ export interface Theme {
   title: string;
   description: string;
   colorTheme: string;
-  layout: 'classic' | 'story' | 'personal-touch' | 'modern-minimal' | 'timeless';
+  layout: 'classic' | 'story' | 'personal-touch' | 'modern-minimal' | 'timeless' | 'serenity' | 'ultra-minimal';
   colors: {
     bg: string;
     primary: string;

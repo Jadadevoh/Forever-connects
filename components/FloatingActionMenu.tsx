@@ -46,7 +46,7 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ isOwner, onMana
                 Floating FAB top-right, expand on tap
             */}
             <div className="md:hidden fixed top-20 right-4 z-50 flex flex-col items-end gap-3 pointer-events-none">
-                {/* Expandable Items (Order: Bottom-up for animation feel) */}
+                {/* Expandable Items (Order: Top-down flow) */}
                 <div className={`flex flex-col gap-3 transition-all duration-300 pointer-events-auto ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
                     {isOwner && (
                         <button onClick={() => { onManage(); setIsOpen(false); }} className={`${desktopBtn} shadow-xl`}>
@@ -62,7 +62,6 @@ const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ isOwner, onMana
                         <span className="material-symbols-outlined">qr_code_2</span>
                         QR Code
                     </button>
-                    {/* Note: FollowButton logic might need wrapper for mobile styles */}
                     <div className="bg-white rounded-xl shadow-xl">
                         <FollowButton memorialId={memorialId} className="w-full justify-start px-4 py-2" />
                     </div>

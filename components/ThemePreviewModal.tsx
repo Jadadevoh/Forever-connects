@@ -1,10 +1,12 @@
 import React from 'react';
-import { Memorial, MemorialCreationData, Theme, Photo } from '../types';
+import { Memorial, MemorialCreationData } from '../types';
 import ClassicLayout from './layouts/ClassicLayout';
 import StoryLayout from './layouts/StoryLayout';
 import PersonalTouchLayout from './layouts/PersonalTouchLayout';
 import ModernMinimalLayout from './layouts/ModernMinimalLayout';
 import TimelessLayout from './layouts/TimelessLayout';
+import SerenityLayout from './layouts/SerenityLayout';
+import UltraMinimalLayout from './layouts/UltraMinimalLayout';
 
 interface ThemePreviewModalProps {
     isOpen: boolean;
@@ -46,6 +48,8 @@ const ThemePreviewModal: React.FC<ThemePreviewModalProps> = ({ isOpen, onClose, 
         emailSettings: formData.emailSettings || { senderName: '', replyToEmail: '' },
         donationInfo: formData.donationInfo!, // Assume it's there or handle it
         followers: [],
+        donations: [],
+        createdAt: Date.now(),
         aiHighlights: [] // Preview starts with no highlights
     };
 
@@ -60,6 +64,12 @@ const ThemePreviewModal: React.FC<ThemePreviewModalProps> = ({ isOpen, onClose, 
             break;
         case 'timeless':
             LayoutComponent = TimelessLayout;
+            break;
+        case 'serenity':
+            LayoutComponent = SerenityLayout;
+            break;
+        case 'ultra-minimal':
+            LayoutComponent = UltraMinimalLayout;
             break;
         case 'classic':
         default:

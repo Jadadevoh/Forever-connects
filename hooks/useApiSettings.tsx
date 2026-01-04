@@ -26,13 +26,13 @@ const ApiSettingsContext = createContext<ApiSettingsContextType | undefined>(und
 const STORAGE_KEY = 'api_settings';
 
 const initialSettings: ApiSettings = {
-  stripePublicKey: '',
-  stripeSecretKey: '',
-  smtpHost: '',
-  smtpPort: '',
-  smtpUser: '',
-  smtpPass: '',
-  paypalClientId: '',
+  stripePublicKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY || '',
+  stripeSecretKey: import.meta.env.VITE_STRIPE_SECRET_KEY || '',
+  smtpHost: import.meta.env.VITE_SMTP_HOST || '',
+  smtpPort: import.meta.env.VITE_SMTP_PORT || '',
+  smtpUser: import.meta.env.VITE_SMTP_USER || '',
+  smtpPass: import.meta.env.VITE_SMTP_PASS || '',
+  paypalClientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
   enableApplePay: false,
   enableGooglePay: false,
   enableAch: false,
@@ -42,7 +42,19 @@ export const ApiSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [apiSettings, setApiSettings] = useState<ApiSettings>(() => {
     try {
       const storedSettings = window.localStorage.getItem(STORAGE_KEY);
-      return storedSettings ? JSON.parse(storedSettings) : initialSettings;
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        // Merge: Use stored value, but if empty/falsy, fall back to initialSettings (env vars)
+        return {
+          ...initialSettings,
+          ...parsed,
+          stripePublicKey: parsed.stripePublicKey || initialSettings.stripePublicKey,
+          stripeSecretKey: parsed.stripeSecretKey || initialSettings.stripeSecretKey,
+          smtpHost: parsed.smtpHost || initialSettings.smtpHost,
+          // Add other critical keys if needed, but these are the main ones
+        };
+      }
+      return initialSettings;
     } catch (error) {
       console.error("Error reading API settings from localStorage", error);
       return initialSettings;

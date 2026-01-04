@@ -11,7 +11,7 @@ interface PersonalTouchLayoutProps {
 }
 
 const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, fullName }) => {
-    const [activeTab, setActiveTab] = useState<'story' | 'gallery' | 'tributes' | 'events'>('story');
+    const [activeTab, setActiveTab] = useState<'story' | 'gallery' | 'tributes' | 'events' | 'support'>('story');
     const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
     // Helper to format dates
@@ -73,20 +73,10 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                     </div>
 
                     {/* Photo 3: Landscape (using second gallery image or placeholder) */}
-                    <div className="absolute top-10 right-0 w-[35%] aspect-video bg-slate-200 dark:bg-slate-700 rounded-xl shadow-md z-10 overflow-hidden border-4 border-white dark:border-slate-800 rotate-6 hover:rotate-2 transition-transform duration-500 opacity-90">
-                        {memorial.gallery && memorial.gallery.length > 1 ? (
-                            <img src={memorial.gallery[1].url} className="w-full h-full object-cover" alt="Memory" />
-                        ) : (
-                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-4xl text-primary/40">landscape</span>
-                            </div>
-                        )}
-                    </div>
+
 
                     {/* Decorative Element */}
-                    <div className="absolute -bottom-6 right-10 z-0 opacity-20 dark:opacity-10 pointer-events-none">
-                        <span className="material-symbols-outlined text-[120px] text-primary rotate-12">history_edu</span>
-                    </div>
+
                 </div>
             </div>
         </section>
@@ -111,6 +101,8 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                 </div>
             )}
 
+
+
             {renderHero()}
 
             {/* Navigation Tabs */}
@@ -121,7 +113,8 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                             { id: 'story', icon: 'auto_stories', label: 'Story' },
                             { id: 'gallery', icon: 'photo_library', label: 'Gallery' },
                             { id: 'tributes', icon: 'favorite', label: 'Tributes' },
-                            { id: 'events', icon: 'event', label: 'Events' }
+                            { id: 'events', icon: 'event', label: 'Events' },
+                            ...(memorial.donationInfo?.isEnabled ? [{ id: 'support', icon: 'volunteer_activism', label: 'Support' }] : [])
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -155,100 +148,75 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                         </article>
 
                         {/* Things They Loved (Static for now, as consistent with design request) */}
-                        <section className="w-full">
-                            <div className="bg-white dark:bg-paper-dark p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 text-center">
-                                <h3 className="font-handwriting text-4xl mb-6 text-slate-800 dark:text-slate-100 -rotate-1">Things {memorial.firstName} Loved</h3>
-                                <div className="flex flex-wrap justify-center gap-3">
-                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-sm font-bold">
-                                        <span className="material-symbols-outlined text-lg">favorite</span> Family
-                                    </span>
-                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 text-sm font-bold">
-                                        <span className="material-symbols-outlined text-lg">group</span> Friends
-                                    </span>
-                                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm font-bold">
-                                        <span className="material-symbols-outlined text-lg">nature</span> Nature
-                                    </span>
+                        {/* Gallery Preview */}
+                        {/* Gallery Preview */}
+                        {memorial.gallery && memorial.gallery.length > 0 && (
+                            <section className="animate-fade-in mt-12">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="font-handwriting text-4xl text-slate-800 dark:text-slate-100">Cherished Memories</h3>
+                                    <button onClick={() => setActiveTab('gallery')} className="text-primary font-bold hover:underline">View All</button>
                                 </div>
-                            </div>
-                        </section>
 
-                        {/* Moments Preview */}
-                        <section className="w-full">
-                            <div className="bg-background-light dark:bg-background-dark p-8 rounded-3xl">
-                                <div className="flex flex-col gap-6">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-bold text-2xl flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-primary">photo_album</span>
-                                            Moments to Remember
-                                        </h3>
-                                        <button onClick={() => setActiveTab('gallery')} className="text-primary font-bold text-sm hover:underline">View All Photos</button>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {memorial.gallery.slice(0, 4).map((item) => (
-                                            <div key={item.id} className="aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative">
-                                                {item.type === 'image' ? (
-                                                    <div className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style={{ backgroundImage: `url(${item.url})` }}></div>
-                                                ) : (
-                                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-                                                        <span className="material-symbols-outlined">play_circle</span>
+                                {/* Recent Photos */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    {memorial.gallery.filter(i => i.type === 'image').slice(0, 4).map((item) => (
+                                        <div key={item.id} className="aspect-square bg-slate-100 rounded-lg overflow-hidden cursor-pointer" onClick={() => setActiveTab('gallery')}>
+                                            <img src={item.url} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" alt={item.caption || "Memory"} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Videos, Links & Files */}
+                                {memorial.gallery.some(i => i.type !== 'image') && (
+                                    <div className="mt-8">
+                                        <h4 className="font-bold text-lg text-slate-700 dark:text-slate-200 mb-4 border-b border-slate-200 pb-2">Videos & Resources</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                            {memorial.gallery.filter(i => i.type !== 'image').slice(0, 6).map((item) => (
+                                                <div key={item.id} onClick={() => setActiveTab('gallery')} className="flex items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:shadow-md transition-shadow">
+                                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mr-3 shrink-0">
+                                                        {item.type === 'video' && <span className="material-symbols-outlined text-red-500">play_circle</span>}
+                                                        {item.type === 'link' && <span className="material-symbols-outlined text-blue-500">link</span>}
+                                                        {item.type === 'audio' && <span className="material-symbols-outlined text-purple-500">mic</span>}
+                                                        {item.type === 'document' && <span className="material-symbols-outlined text-orange-500">description</span>}
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                        <div onClick={() => setActiveTab('gallery')} className="aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-4xl text-slate-400">add_a_photo</span>
+                                                    <div className="overflow-hidden">
+                                                        <p className="font-medium text-sm truncate text-slate-800 dark:text-slate-100">
+                                                            {'caption' in item && item.caption ? item.caption :
+                                                                'title' in item && item.title ? item.title :
+                                                                    'fileName' in item ? item.fileName : 'Untitled Item'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500 uppercase">{item.type}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Map / Location */}
-                        <div className="max-w-3xl mx-auto w-full">
-                            <div className="bg-white dark:bg-paper-dark p-2 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-                                <div className="rounded-2xl overflow-hidden h-48 w-full relative group bg-slate-100">
-                                    {/* Placeholder Map Image */}
-                                    <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: 'url(https://maps.googleapis.com/maps/api/staticmap?center=Vermont&zoom=10&size=600x300&sensor=false)' }}></div>
-                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                        <div className="bg-white/90 backdrop-blur text-slate-900 px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
-                                            <span className="material-symbols-outlined text-red-500">location_on</span>
-                                            <span className="font-bold text-sm">{memorial.city}, {memorial.state}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-4 grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h4 className="font-bold text-lg mb-1">Resting Place</h4>
-                                        <p className="text-sm text-slate-500">{memorial.restingPlace || 'Private'}</p>
-                                    </div>
-                                    {/* Cause of Death */}
-                                    {!memorial.isCauseOfDeathPrivate && memorial.causeOfDeath && memorial.causeOfDeath.length > 0 && (
-                                        <div>
-                                            <h4 className="font-bold text-lg mb-1">Cause of Passing</h4>
-                                            <p className="text-sm text-slate-500">{memorial.causeOfDeath.join(', ')}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Donation Widget */}
-                        {memorial.donationInfo?.isEnabled && (
-                            <div className="bg-gradient-to-br from-primary to-blue-600 p-8 rounded-3xl shadow-lg text-white text-center relative overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                                <span className="material-symbols-outlined text-5xl mb-4 relative z-10">volunteer_activism</span>
-                                <h3 className="font-handwriting text-4xl mb-4 relative z-10">Legacy Fund</h3>
-                                <p className="text-blue-100 text-lg mb-8 relative z-10 max-w-xl mx-auto">{memorial.donationInfo.description}</p>
-                                <button
-                                    onClick={() => setIsDonationModalOpen(true)}
-                                    className="bg-white text-primary font-bold px-10 py-3 rounded-full hover:bg-blue-50 transition-colors shadow-md relative z-10 text-lg"
-                                >
-                                    Support Family
-                                </button>
-                            </div>
+                                )}
+                            </section>
                         )}
+
+                        {/* Tributes List */}
+                        <section className="animate-fade-in mt-16 space-y-8">
+                            <div className="text-center">
+                                <h3 className="font-handwriting text-4xl text-slate-800 dark:text-slate-100 mb-2">Tributes</h3>
+                                <div className="flex justify-center gap-4 text-sm text-slate-500">
+                                    <button onClick={() => setActiveTab('tributes')} className="hover:text-primary underline">Read All</button>
+                                    <span>&bull;</span>
+                                    <button onClick={() => setActiveTab('tributes')} className="hover:text-primary underline">Share a Memory</button>
+                                </div>
+                            </div>
+                            <TributeList tributes={memorial.tributes.slice(0, 3)} memorialId={memorial.id} />
+                            {memorial.tributes.length > 3 && (
+                                <div className="text-center mt-6">
+                                    <button onClick={() => setActiveTab('tributes')} className="px-6 py-2 border border-slate-300 rounded-full text-slate-600 hover:bg-slate-50 transition-colors">
+                                        View more tributes
+                                    </button>
+                                </div>
+                            )}
+                        </section>
                     </div>
                 )}
+
 
 
                 {/* GALLERY TAB */}
@@ -297,21 +265,19 @@ const PersonalTouchLayout: React.FC<PersonalTouchLayoutProps> = ({ memorial, ful
                     </div>
                 )}
 
+                {/* SUPPORT TAB */}
+                {activeTab === 'support' && memorial.donationInfo?.isEnabled && (
+                    <div className="animate-fade-in max-w-4xl mx-auto">
+                        <div className="bg-white dark:bg-paper-dark p-8 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-800">
+                            <DonationModule memorial={memorial} />
+                        </div>
+                    </div>
+                )}
+
             </div>
 
-            <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-12 mt-auto">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-slate-400">favorite</span>
-                        <p className="text-sm text-slate-500 font-medium">© 2024 Forever Loved. All rights reserved.</p>
-                    </div>
-                    <div className="flex gap-6">
-                        <a className="text-sm text-slate-500 hover:text-primary" href="#">Privacy</a>
-                        <a className="text-sm text-slate-500 hover:text-primary" href="#">Terms</a>
-                    </div>
-                </div>
-            </footer>
-        </div>
+
+        </div >
     );
 };
 

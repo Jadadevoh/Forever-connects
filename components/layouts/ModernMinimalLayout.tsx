@@ -204,8 +204,7 @@ const ModernMinimalLayout: React.FC<ModernMinimalLayoutProps> = ({ memorial, ful
                         )}
 
                         {/* Donation Section */}
-                        {memorial.donationInfo?.isEnabled && (
-                            {/* Donation Section - Compact & Minimal */ }
+                        {/* Donation Section - Compact & Minimal */}
                         {memorial.donationInfo?.isEnabled && (
                             <section className="mt-16 pt-8 border-t border-gray-100 animate-fade-in">
                                 <div className="bg-white border border-gray-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg shadow-gray-100">

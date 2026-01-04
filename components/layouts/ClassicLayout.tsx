@@ -145,7 +145,6 @@ const ClassicLayout: React.FC<{ memorial: Memorial, fullName: string }> = ({ mem
                         </div>
                     </section>
                 )}
-                )}
 
                 {activeTab === 'support' && memorial.donationInfo?.isEnabled && (
                     <section className="animate-fade-in p-8">
